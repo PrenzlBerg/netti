@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Thuis Quest ✨</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0D0D1A">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Thuis Quest">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --yellow:  #FFD02F;
+      --blue:    #2D9BF0;
+      --green:   #49C576;
+      --red:     #F24726;
+      --purple:  #9B5DE5;
+      --orange:  #FF8C42;
+      --bg:      #0D0D1A;
+      --bg2:     #13132A;
+      --card:    rgba(255,255,255,0.04);
+      --card-b:  rgba(255,255,255,0.08);
+      --text:    #FFFFFF;
+      --text2:   #8B8BB0;
+      --r:       16px;
+      --r-sm:    10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+    #root {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      max-width: 500px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ──────────────────────────────────────────────
+       SCREENS
+    ────────────────────────────────────────────── */
+    .screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    .screen.active { display: flex; }
+
+    /* ──────────────────────────────────────────────
+       LOGIN SCREEN
+    ────────────────────────────────────────────── */
+    #login {
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(45,155,240,.25) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 90%, rgba(155,93,229,.2) 0%, transparent 55%),
+        radial-gradient(ellipse at 60% 40%, rgba(73,197,118,.1) 0%, transparent 40%),
+        var(--bg);
+      justify-content: center;
+      align-items: center;
+      padding: 32px 24px;
+      gap: 36px;
+    }
+
+    .login-logo { text-align: center; }
+    .login-logo h1 {
+      font-size: 48px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--blue) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .login-logo .tagline { color: var(--text2); margin-top: 8px; font-size: 16px; font-weight: 500; }
+
+    .user-cards { display: flex; gap: 16px; width: 100%; }
+    .user-card {
+      flex: 1; background: var(--card); border: 1.5px solid var(--card-b);
+      border-radius: 24px; padding: 28px 16px; text-align: center; cursor: pointer;
+      transition: all .2s cubic-bezier(.34,1.56,.64,1);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      position: relative; overflow: hidden;
+    }
+    .user-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,.03));
+    }
+    .user-card:hover { transform: translateY(-6px) scale(1.02); }
+    .user-card.pj:hover { border-color: var(--blue); box-shadow: 0 12px 40px rgba(45,155,240,.25); }
+    .user-card.ce:hover { border-color: var(--purple); box-shadow: 0 12px 40px rgba(155,93,229,.25); }
+
+    .user-avatar { font-size: 56px; line-height: 1; }
+    .user-name { font-weight: 800; font-size: 18px; }
+    .change-avatar-btn {
+      font-size: 11px; color: var(--text2); background: rgba(255,255,255,.07);
+      border: 1px solid var(--card-b); border-radius: 20px; padding: 5px 12px; cursor: pointer;
+      font-family: inherit; font-weight: 600; transition: all .15s;
+    }
+    .change-avatar-btn:hover { color: var(--text); background: rgba(255,255,255,.12); }
+
+    /* ──────────────────────────────────────────────
+       APP SHELL
+    ────────────────────────────────────────────── */
+    #app { background: var(--bg); }
+
+    /* Header */
+    .app-header {
+      padding: 14px 20px 12px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--card-b);
+      flex-shrink: 0;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .current-user { display: flex; align-items: center; gap: 10px; }
+    .cur-avatar { font-size: 30px; }
+    .cur-name { font-weight: 800; font-size: 17px; }
+    .cur-pts { font-size: 12px; color: var(--text2); margin-top: 1px; }
+    .cur-pts span { color: var(--yellow); font-weight: 700; }
+
+    .switch-btn {
+      background: rgba(255,255,255,.07); border: 1px solid var(--card-b); border-radius: 10px;
+      color: var(--text2); padding: 7px 14px; cursor: pointer; font-size: 13px;
+      font-family: inherit; font-weight: 600; transition: all .15s;
+    }
+    .switch-btn:hover { color: var(--text); background: rgba(255,255,255,.12); }
+
+    .score-strip {
+      display: flex; gap: 10px;
+      background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 14px;
+    }
+    .score-item { flex: 1; display: flex; align-items: center; gap: 8px; }
+    .sc-av { font-size: 22px; }
+    .sc-name { font-size: 11px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .sc-pts { font-size: 20px; font-weight: 900; }
+    .sc-pts.leading { color: var(--yellow); }
+    .score-div { width: 1px; background: var(--card-b); }
+
+    /* Nav */
+    .app-nav {
+      display: flex; background: var(--bg2); border-top: 1px solid var(--card-b);
+      padding-bottom: env(safe-area-inset-bottom, 0); flex-shrink: 0;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px 8px; cursor: pointer; border: none; background: none;
+      color: var(--text2); font-family: inherit; font-size: 10px; font-weight: 700;
+      gap: 2px; letter-spacing: .3px; text-transform: uppercase;
+      border-top: 2px solid transparent; transition: color .15s, border-color .15s;
+      position: relative;
+    }
+    .nav-btn.active { color: var(--yellow); border-top-color: var(--yellow); }
+    .nav-icon { font-size: 22px; }
+    .nav-badge {
+      position: absolute; top: 6px; right: calc(50% - 18px);
+      background: var(--red); color: #fff; font-size: 9px; font-weight: 900;
+      min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Content area */
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .view { display: none; padding: 20px; padding-bottom: 12px; }
+    .view.active { display: block; }
+
+    /* ──────────────────────────────────────────────
+       TASKS VIEW
+    ────────────────────────────────────────────── */
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .view-title { font-size: 24px; font-weight: 900; }
+
+    .filters {
+      display: flex; gap: 6px; margin-bottom: 16px;
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-pill {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+      border: 1px solid var(--card-b); background: var(--card);
+      color: var(--text2); font-size: 12px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: all .15s;
+    }
+    .filter-pill.on { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+    .tasks-list { display: grid; gap: 12px; }
+
+    .task-card {
+      background: var(--card); border: 1.5px solid var(--card-b); border-radius: var(--r);
+      padding: 16px 16px 14px 20px; cursor: default; position: relative; overflow: hidden;
+      transition: transform .2s, border-color .2s;
+    }
+    .task-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px;
+    }
+    .task-card.u-good    { border-color: rgba(73,197,118,.2); }
+    .task-card.u-good::before    { background: var(--green); }
+    .task-card.u-warning { border-color: rgba(255,208,47,.2); }
+    .task-card.u-warning::before { background: var(--yellow); }
+    .task-card.u-soon    { border-color: rgba(255,140,66,.3); }
+    .task-card.u-soon::before    { background: var(--orange); }
+    .task-card.u-overdue { border-color: rgba(242,71,38,.3); animation: pulseRed 2.5s infinite; }
+    .task-card.u-overdue::before { background: var(--red); }
+    .task-card.challenged { border-color: rgba(155,93,229,.4) !important; }
+
+    @keyframes pulseRed {
+      0%,100% { box-shadow: 0 0 0 0 rgba(242,71,38,0); }
+      50%      { box-shadow: 0 0 0 6px rgba(242,71,38,.12); }
+    }
+
+    .tc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+    .tc-name { font-size: 16px; font-weight: 800; flex: 1; }
+    .tc-pts  { font-size: 14px; font-weight: 900; color: var(--yellow); white-space: nowrap; }
+    .tc-challenge-pts { color: var(--purple); }
+
+    .tc-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tc-meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); }
+    .stars-filled { color: var(--yellow); letter-spacing: -1px; }
+
+    .urgency-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .urgency-tag.u-good    { background: rgba(73,197,118,.15); color: var(--green); }
+    .urgency-tag.u-warning { background: rgba(255,208,47,.15); color: var(--yellow); }
+    .urgency-tag.u-soon    { background: rgba(255,140,66,.18); color: var(--orange); }
+    .urgency-tag.u-overdue { background: rgba(242,71,38,.15); color: var(--red); }
+
+    .tc-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-complete {
+      flex: 1; padding: 10px; border-radius: var(--r-sm); border: none;
+      background: var(--green); color: #000; font-weight: 800; font-size: 14px;
+      cursor: pointer; font-family: inherit; transition: opacity .15s, transform .1s;
+    }
+    .btn-complete:active { transform: scale(.97); opacity: .85; }
+    .btn-edit {
+      padding: 10px 13px; border-radius: var(--r-sm); border: 1px solid var(--card-b);
+      background: rgba(255,255,255,.06); color: var(--text2); cursor: pointer; font-size: 16px;
+      transition: all .15s;
+    }
+    .btn-edit:hover { background: rgba(255,255,255,.12); color: var(--text); }
+
+    .challenge-flag {
+      position: absolute; top: 10px; right: 14px;
+      font-size: 16px; line-height: 1;
+    }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text2); }
+    .empty-icon  { font-size: 52px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .empty-state p  { font-size: 14px; line-height: 1.6; }
+
+    /* ──────────────────────────────────────────────
+       ADD / EDIT TASK VIEW
+    ────────────────────────────────────────────── */
+    .form-group { margin-bottom: 22px; }
+    .form-label {
+      display: block; font-size: 12px; font-weight: 700; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid var(--card-b);
+      border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 16px;
+      padding: 13px 15px; outline: none; transition: border-color .15s;
+    }
+    .form-input:focus { border-color: var(--blue); }
+    .form-input::placeholder { color: #44446a; }
+
+    .star-picker { display: flex; gap: 8px; }
+    .star-btn {
+      flex: 1; padding: 12px 4px; border-radius: var(--r-sm); border: 1.5px solid var(--card-b);
+      background: rgba(255,255,255,.05); color: var(--text2); font-size: 13px; font-weight: 800;
+      cursor: pointer; font-family: inherit; transition: all .15s; text-align: center;
+    }
+    .star-btn.on {
+      background: rgba(255,208,47,.15); border-color: var(--yellow); color: var(--yellow);
+    }
+    .star-btn .sb-num { font-size: 16px; display: block; }
+    .star-btn .sb-label { font-size: 9px; color: var(--text2); display: block; margin-top: 2px; letter-spacing: .3px; }
+    .star-btn.on .sb-label { color: rgba(255,208,47,.7); }
+
+    .quick-freqs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .qf-btn {
+      padding: 6px 12px; border-radius: 20px; border: 1px solid var(--card-b);
+      background: var(--card); color: var(--text2); font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all .15s;
+    }
+    .qf-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+    .freq-row { display: flex; gap: 10px; }
+    .freq-num { width: 80px; text-align: center; }
+
+    .pts-preview {
+      background: rgba(255,208,47,.08); border: 1.5px solid rgba(255,208,47,.25);
+      border-radius: var(--r-sm); padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+    }
+    .pts-preview-label { font-size: 13px; color: var(--text2); font-weight: 600; }
+    .pts-preview-val { font-size: 32px; font-weight: 900; color: var(--yellow); }
+
+    .btn-primary {
+      width: 100%; padding: 16px; border-radius: var(--r); border: none;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: #fff; font-family: inherit; font-size: 16px; font-weight: 800;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .btn-primary:active { opacity: .85; transform: scale(.99); }
+
+    .btn-danger {
+      width: 100%; margin-top: 12px; padding: 14px; border-radius: var(--r);
+      border: 1.5px solid rgba(242,71,38,.35); background: rgba(242,71,38,.08);
+      color: var(--red); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-danger:hover { background: rgba(242,71,38,.15); }
+
+    /* ──────────────────────────────────────────────
+       CHALLENGES VIEW
+    ────────────────────────────────────────────── */
+    .section-title {
+      font-size: 12px; font-weight: 700; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; margin-top: 4px;
+    }
+    .challenges-block { margin-bottom: 28px; }
+
+    .chal-card {
+      background: var(--card); border: 1.5px solid var(--card-b); border-radius: var(--r);
+      padding: 16px; margin-bottom: 10px;
+    }
+    .chal-card.incoming { border-color: rgba(155,93,229,.35); background: rgba(155,93,229,.05); }
+    .chal-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .chal-from { font-size: 12px; color: var(--text2); font-weight: 600; }
+    .chal-bonus { font-size: 16px; font-weight: 900; color: var(--green); }
+    .chal-task  { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .chal-status { font-size: 12px; color: var(--text2); }
+
+    .new-chal-form {
+      background: rgba(255,255,255,.04); border: 1.5px solid var(--card-b);
+      border-radius: var(--r); padding: 20px;
+    }
+    .form-select {
+      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid var(--card-b);
+      border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 16px;
+      padding: 12px 14px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none;
+    }
+    select option { background: #1a1a35; }
+
+    /* ──────────────────────────────────────────────
+       LEADERBOARD VIEW
+    ────────────────────────────────────────────── */
+    .lb-month { text-align: center; margin-bottom: 28px; }
+    .lb-month-label { font-size: 12px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+    .lb-month-name { font-size: 28px; font-weight: 900; }
+
+    .podium { display: flex; gap: 14px; margin-bottom: 28px; }
+    .podium-card {
+      flex: 1; background: var(--card); border: 1.5px solid var(--card-b);
+      border-radius: 20px; padding: 22px 12px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .podium-card.crown-card { border-color: var(--yellow); background: rgba(255,208,47,.07); }
+    .pod-crown { font-size: 26px; }
+    .pod-avatar { font-size: 40px; }
+    .pod-name { font-size: 14px; font-weight: 800; }
+    .pod-pts { font-size: 32px; font-weight: 900; color: var(--yellow); }
+    .pod-label { font-size: 10px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+
+    .progress-block { margin-bottom: 8px; }
+    .pb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .pb-who { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .pb-val { font-size: 13px; font-weight: 800; color: var(--yellow); }
+    .progress-bar { height: 8px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+    .progress-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.34,1.2,.64,1); }
+
+    .hist-item {
+      background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r-sm);
+      padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+    }
+    .hist-info { flex: 1; }
+    .hist-month { font-size: 14px; font-weight: 700; }
+    .hist-scores { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .hist-winner { font-size: 22px; }
+
+    /* ──────────────────────────────────────────────
+       MODAL
+    ────────────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 100; backdrop-filter: blur(4px);
+    }
+    .overlay.open { display: flex; }
+
+    .sheet {
+      background: var(--bg2); border-radius: 24px 24px 0 0;
+      padding: 8px 24px 32px; width: 100%; max-width: 500px;
+      max-height: 88vh; overflow-y: auto;
+      border-top: 1px solid var(--card-b);
+      animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .sheet-handle {
+      width: 40px; height: 4px; background: rgba(255,255,255,.15);
+      border-radius: 2px; margin: 12px auto 20px;
+    }
+    .sheet-title { font-size: 22px; font-weight: 900; margin-bottom: 16px; }
+
+    /* Avatar grid */
+    .avatar-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 20px;
+    }
+    .av-opt {
+      aspect-ratio: 1; font-size: 26px; display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; border: 2px solid transparent; cursor: pointer;
+      background: rgba(255,255,255,.05); transition: all .15s;
+    }
+    .av-opt.on { border-color: var(--yellow); background: rgba(255,208,47,.15); }
+    .av-opt:hover { transform: scale(1.1); }
+
+    /* Complete modal */
+    .complete-big-pts {
+      text-align: center; padding: 24px 0 8px;
+    }
+    .complete-emoji { font-size: 56px; display: block; margin-bottom: 8px; }
+    .complete-pts-num { font-size: 52px; font-weight: 900; color: var(--yellow); display: block; }
+    .complete-pts-label { color: var(--text2); font-size: 14px; display: block; margin-top: 4px; }
+    .complete-bonus { font-size: 20px; font-weight: 800; color: var(--purple); margin-top: 8px; display: block; }
+    .complete-total { font-size: 28px; font-weight: 900; color: var(--green); margin-top: 4px; display: block; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-secondary {
+      flex: 1; padding: 14px; border-radius: var(--r); border: 1.5px solid var(--card-b);
+      background: rgba(255,255,255,.07); color: var(--text); font-family: inherit;
+      font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.12); }
+
+    /* Points popup */
+    .pts-popup {
+      position: fixed; pointer-events: none; z-index: 200;
+      font-size: 30px; font-weight: 900; color: var(--yellow);
+      text-shadow: 0 2px 12px rgba(255,208,47,.5);
+      animation: floatUp 1.6s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0) scale(.5); }
+      25%  { opacity: 1; transform: translateY(-24px) scale(1.25); }
+      100% { opacity: 0; transform: translateY(-90px) scale(1); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div id="root">
+
+  <!-- ════════════════════════════════════════════
+       LOGIN SCREEN
+  ═══════════════════════════════════════════════ -->
+  <div id="login" class="screen active">
+    <div class="login-logo">
+      <h1>Thuis Quest</h1>
+      <div class="tagline">Huishouden als avontuur 🏆</div>
+    </div>
+    <div class="user-cards">
+      <div class="user-card pj" onclick="login('pieterjan')">
+        <div class="user-avatar" id="login-av-pieterjan">🧔</div>
+        <div class="user-name">Pieterjan</div>
+        <button class="change-avatar-btn" onclick="event.stopPropagation();openAvatarPicker('pieterjan')">Avatar kiezen</button>
+      </div>
+      <div class="user-card ce" onclick="login('celine')">
+        <div class="user-avatar" id="login-av-celine">👩‍🦱</div>
+        <div class="user-name">Céline</div>
+        <button class="change-avatar-btn" onclick="event.stopPropagation();openAvatarPicker('celine')">Avatar kiezen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       APP SCREEN
+  ═══════════════════════════════════════════════ -->
+  <div id="app" class="screen">
+
+    <!-- Header -->
+    <div class="app-header">
+      <div class="header-top">
+        <div class="current-user">
+          <div class="cur-avatar" id="h-avatar"></div>
+          <div>
+            <div class="cur-name" id="h-name"></div>
+            <div class="cur-pts">Deze maand: <span id="h-pts">0</span> pts</div>
+          </div>
+        </div>
+        <button class="switch-btn" onclick="logout()">⇄ Wissel</button>
+      </div>
+      <div class="score-strip">
+        <div class="score-item">
+          <div class="sc-av" id="sc-av-pj">🧔</div>
+          <div>
+            <div class="sc-name">Pieterjan</div>
+            <div class="sc-pts" id="sc-pts-pj">0</div>
+          </div>
+        </div>
+        <div class="score-div"></div>
+        <div class="score-item">
+          <div class="sc-av" id="sc-av-ce">👩‍🦱</div>
+          <div>
+            <div class="sc-name">Céline</div>
+            <div class="sc-pts" id="sc-pts-ce">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="app-content">
+
+      <!-- TASKS -->
+      <div id="view-tasks" class="view active">
+        <div class="view-header">
+          <div class="view-title">Taken 🏠</div>
+        </div>
+        <div class="filters">
+          <button class="filter-pill on" onclick="setFilter('all',this)">Alle</button>
+          <button class="filter-pill" onclick="setFilter('overdue',this)">🔴 Te laat</button>
+          <button class="filter-pill" onclick="setFilter('soon',this)">🟠 Binnenkort</button>
+          <button class="filter-pill" onclick="setFilter('good',this)">🟢 Op schema</button>
+        </div>
+        <div class="tasks-list" id="tasks-list"></div>
+      </div>
+
+      <!-- ADD / EDIT -->
+      <div id="view-add" class="view">
+        <div class="view-header">
+          <div class="view-title" id="add-title">Nieuwe Taak ✨</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Naam van de taak</label>
+          <input class="form-input" id="t-name" type="text" placeholder="bijv. Kattenbak kuisen…">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Moeilijkheid ⚡</label>
+          <div class="star-picker" id="pick-diff">
+            <button class="star-btn" data-v="1" onclick="setStar('diff',1)"><span class="sb-num">1★</span><span class="sb-label">Makkelijk</span></button>
+            <button class="star-btn" data-v="2" onclick="setStar('diff',2)"><span class="sb-num">2★</span><span class="sb-label">Licht</span></button>
+            <button class="star-btn" data-v="3" onclick="setStar('diff',3)"><span class="sb-num">3★</span><span class="sb-label">Gemiddeld</span></button>
+            <button class="star-btn" data-v="4" onclick="setStar('diff',4)"><span class="sb-num">4★</span><span class="sb-label">Zwaar</span></button>
+            <button class="star-btn" data-v="5" onclick="setStar('diff',5)"><span class="sb-num">5★</span><span class="sb-label">Extreem</span></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tijdsduur ⏱️</label>
+          <div class="star-picker" id="pick-dur">
+            <button class="star-btn" data-v="1" onclick="setStar('dur',1)"><span class="sb-num">1★</span><span class="sb-label">&lt;5 min</span></button>
+            <button class="star-btn" data-v="2" onclick="setStar('dur',2)"><span class="sb-num">2★</span><span class="sb-label">~15 min</span></button>
+            <button class="star-btn" data-v="3" onclick="setStar('dur',3)"><span class="sb-num">3★</span><span class="sb-label">~30 min</span></button>
+            <button class="star-btn" data-v="4" onclick="setStar('dur',4)"><span class="sb-num">4★</span><span class="sb-label">~1 uur</span></button>
+            <button class="star-btn" data-v="5" onclick="setStar('dur',5)"><span class="sb-num">5★</span><span class="sb-label">&gt;1 uur</span></button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frequentie</label>
+          <div class="quick-freqs">
+            <button class="qf-btn" onclick="setFreq(1)">Dagelijks</button>
+            <button class="qf-btn" onclick="setFreq(2)">Om de 2 dagen</button>
+            <button class="qf-btn" onclick="setFreq(7)">Wekelijks</button>
+            <button class="qf-btn" onclick="setFreq(14)">2-wekelijks</button>
+            <button class="qf-btn" onclick="setFreq(30)">Maandelijks</button>
+          </div>
+          <div class="freq-row">
+            <input class="form-input freq-num" id="t-freq" type="number" min="1" value="7" placeholder="7">
+            <input class="form-input" value="dagen" readonly style="flex:1; color: var(--text2);">
+          </div>
+        </div>
+        <div class="pts-preview">
+          <span class="pts-preview-label">Punten per voltooiing</span>
+          <span class="pts-preview-val" id="pts-prev">0</span>
+        </div>
+        <button class="btn-primary" id="save-btn" onclick="saveTask()">Taak Opslaan</button>
+        <button class="btn-danger" id="del-btn" style="display:none" onclick="deleteTask()">🗑 Taak Verwijderen</button>
+      </div>
+
+      <!-- CHALLENGES -->
+      <div id="view-challenges" class="view">
+        <div class="view-header">
+          <div class="view-title">Challenges ⚡</div>
+        </div>
+        <div class="challenges-block">
+          <div class="section-title">Uitdagingen voor jou</div>
+          <div id="chal-incoming"></div>
+        </div>
+        <div class="challenges-block">
+          <div class="section-title">Stuur een challenge</div>
+          <div class="new-chal-form">
+            <div class="form-group">
+              <label class="form-label">Taak</label>
+              <select class="form-select" id="chal-task"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bonus punten</label>
+              <input class="form-input" id="chal-bonus" type="number" min="10" max="999" value="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Deadline (in dagen)</label>
+              <input class="form-input" id="chal-days" type="number" min="1" max="30" value="3">
+            </div>
+            <button class="btn-primary" onclick="sendChallenge()">⚡ Challenge Sturen</button>
+          </div>
+        </div>
+        <div class="challenges-block">
+          <div class="section-title">Verstuurde challenges</div>
+          <div id="chal-outgoing"></div>
+        </div>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div id="view-leaderboard" class="view">
+        <div class="lb-month">
+          <div class="lb-month-label">Huidig Maand</div>
+          <div class="lb-month-name" id="lb-month"></div>
+        </div>
+        <div class="podium" id="lb-podium"></div>
+        <div id="lb-bars"></div>
+        <div style="margin-top: 24px;">
+          <div class="section-title">Historiek 🏆</div>
+          <div id="lb-history"></div>
+        </div>
+      </div>
+
+    </div><!-- end app-content -->
+
+    <!-- Bottom Nav -->
+    <nav class="app-nav">
+      <button class="nav-btn active" id="nav-tasks" onclick="setView('tasks',this)">
+        <span class="nav-icon">🏠</span>Taken
+      </button>
+      <button class="nav-btn" id="nav-add" onclick="openAddView()">
+        <span class="nav-icon">➕</span>Toevoegen
+      </button>
+      <button class="nav-btn" id="nav-challenges" onclick="setView('challenges',this)">
+        <span class="nav-icon">⚡</span>Challenges
+      </button>
+      <button class="nav-btn" id="nav-leaderboard" onclick="setView('leaderboard',this)">
+        <span class="nav-icon">🏆</span>Scores
+      </button>
+    </nav>
+  </div><!-- end #app -->
+
+</div><!-- end #root -->
+
+<!-- ════════════════════════════════════════════
+     AVATAR MODAL
+═══════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-avatar" onclick="if(event.target===this)closeOverlay('avatar')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Kies jouw avatar</div>
+    <div class="avatar-grid" id="av-grid"></div>
+    <button class="btn-primary" onclick="closeOverlay('avatar')">Bevestigen ✓</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     COMPLETE MODAL
+═══════════════════════════════════════════════ -->
+<div class="overlay" id="overlay-complete" onclick="if(event.target===this)closeOverlay('complete')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="cm-title"></div>
+    <div class="complete-big-pts">
+      <span class="complete-emoji" id="cm-emoji">🎊</span>
+      <span class="complete-pts-num" id="cm-pts"></span>
+      <span class="complete-pts-label">punten verdiend</span>
+      <span class="complete-bonus" id="cm-bonus" style="display:none"></span>
+      <span class="complete-total" id="cm-total" style="display:none"></span>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" style="background:linear-gradient(135deg,var(--green),var(--blue))" onclick="confirmComplete()">✅ Volbracht!</button>
+      <button class="btn-secondary" onclick="closeOverlay('complete')">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════
+const AVATARS = [
+  '🧔','👩‍🦱','👨','👩','🧑','🧑‍🦰','👨‍🦱','🧙','🧝','🦸','🦹',
+  '🧟','🧛','🧜','🧚','👮','🕵️','👷','🤠','🥷','🧑‍🍳','🧑‍🔬',
+  '🧑‍🎨','🐱','🐶','🦊','🐼','🦁','🐯','🦄','🐸','🦋',
+  '🌻','⭐','🌈','🔥','💎','👾','🎮','🏆'
+];
+
+const FREQ_LABELS = {1:'Dagelijks',2:'Om de 2 dagen',7:'Wekelijks',14:'2-wekelijks',30:'Maandelijks'};
+
+// ══════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════
+let S = {
+  users: {
+    pieterjan: { name:'Pieterjan', avatar:'🧔', monthlyPoints:0, totalPoints:0 },
+    celine:    { name:'Céline',    avatar:'👩‍🦱', monthlyPoints:0, totalPoints:0 }
+  },
+  tasks: [],
+  challenges: [],
+  history: [],
+  currentMonth: '',
+  // runtime only (not persisted)
+  me: null,
+  editId: null,
+  diff: 3,
+  dur: 2,
+  filter: 'all',
+  pendingTaskId: null,
+  avatarFor: null
+};
+
+// ══════════════════════════════════════════════════
+//  PERSISTENCE
+// ══════════════════════════════════════════════════
+function save() {
+  localStorage.setItem('tq_v2', JSON.stringify({
+    users: S.users, tasks: S.tasks, challenges: S.challenges,
+    history: S.history, currentMonth: S.currentMonth
+  }));
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('tq_v2') || '{}');
+    if (d.users)     S.users     = d.users;
+    if (d.tasks)     S.tasks     = d.tasks;
+    if (d.challenges) S.challenges = d.challenges;
+    if (d.history)   S.history   = d.history;
+    if (d.currentMonth) S.currentMonth = d.currentMonth;
+  } catch(e) {}
+  checkMonthReset();
+}
+
+// ══════════════════════════════════════════════════
+//  MONTHLY RESET
+// ══════════════════════════════════════════════════
+function checkMonthReset() {
+  const now = new Date();
+  const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  if (S.currentMonth && S.currentMonth !== key) {
+    const pj = S.users.pieterjan.monthlyPoints;
+    const ce = S.users.celine.monthlyPoints;
+    const winner = pj >= ce ? 'pieterjan' : 'celine';
+    const [y,m] = S.currentMonth.split('-');
+    S.history.unshift({
+      month: S.currentMonth,
+      label: new Date(+y,+m-1).toLocaleDateString('nl-BE',{month:'long',year:'numeric'}),
+      winner,
+      scores: { pieterjan: pj, celine: ce }
+    });
+    S.users.pieterjan.monthlyPoints = 0;
+    S.users.celine.monthlyPoints    = 0;
+    // expire old pending challenges
+    S.challenges.forEach(c => { if(c.status==='pending') c.status='expired'; });
+  }
+  S.currentMonth = key;
+  save();
+}
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36);
+
+function calcPts(diff, dur) { return diff * dur * 4; }
+
+function urgency(task) {
+  if (!task.lastDone) return 'overdue';
+  const days = (Date.now() - new Date(task.lastDone)) / 86400000;
+  const r = days / task.freq;
+  if (r < 0.5) return 'good';
+  if (r < 0.75) return 'warning';
+  if (r < 1)   return 'soon';
+  return 'overdue';
+}
+
+function urgencyLabel(u, task) {
+  if (u === 'good') {
+    const left = Math.ceil(task.freq - (Date.now()-new Date(task.lastDone))/86400000);
+    return `🟢 Over ${left} dag${left!==1?'en':''}`;
+  }
+  if (u === 'warning') return '🟡 Binnenkort';
+  if (u === 'soon')    return '🟠 Bijna!';
+  return '🔴 Te laat!';
+}
+
+function freqLabel(d) {
+  return FREQ_LABELS[d] || `Elke ${d} dagen`;
+}
+
+function stars(n) {
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+function other() {
+  return S.me === 'pieterjan' ? 'celine' : 'pieterjan';
+}
+
+function monthName() {
+  const now = new Date();
+  const s = now.toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ══════════════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ══════════════════════════════════════════════════
+function login(userId) {
+  S.me = userId;
+  document.getElementById('login').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  updateHeader();
+  setView('tasks', document.getElementById('nav-tasks'));
+}
+
+function logout() {
+  S.me = null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login').classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+//  HEADER
+// ══════════════════════════════════════════════════
+function updateHeader() {
+  if (!S.me) return;
+  const u = S.users[S.me];
+  document.getElementById('h-avatar').textContent = u.avatar;
+  document.getElementById('h-name').textContent   = u.name;
+  document.getElementById('h-pts').textContent    = u.monthlyPoints;
+
+  const pj = S.users.pieterjan, ce = S.users.celine;
+  document.getElementById('sc-av-pj').textContent  = pj.avatar;
+  document.getElementById('sc-av-ce').textContent  = ce.avatar;
+
+  const pjEl = document.getElementById('sc-pts-pj');
+  const ceEl = document.getElementById('sc-pts-ce');
+  pjEl.textContent = pj.monthlyPoints;
+  ceEl.textContent = ce.monthlyPoints;
+
+  const pjLeads = pj.monthlyPoints >= ce.monthlyPoints;
+  pjEl.className = 'sc-pts' + (pjLeads && (pj.monthlyPoints>0||ce.monthlyPoints>0) ? ' leading' : '');
+  ceEl.className = 'sc-pts' + (!pjLeads && ce.monthlyPoints>0 ? ' leading' : '');
+
+  // login screen avatars
+  document.getElementById('login-av-pieterjan').textContent = pj.avatar;
+  document.getElementById('login-av-celine').textContent    = ce.avatar;
+
+  // challenge badge
+  const pending = S.challenges.filter(c => c.to === S.me && c.status === 'pending').length;
+  const nb = document.getElementById('nav-challenges');
+  nb.innerHTML = `<span class="nav-icon">⚡</span>Challenges${pending>0?`<span class="nav-badge">${pending}</span>`:''}`;
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+function setView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'tasks')       renderTasks();
+  if (name === 'challenges')  renderChallenges();
+  if (name === 'leaderboard') renderLeaderboard();
+}
+
+function openAddView(taskId) {
+  S.editId = taskId || null;
+  if (taskId) {
+    const t = S.tasks.find(x => x.id === taskId);
+    document.getElementById('add-title').textContent = 'Taak Bewerken ✏️';
+    document.getElementById('t-name').value  = t.name;
+    document.getElementById('t-freq').value  = t.freq;
+    setStar('diff', t.diff);
+    setStar('dur',  t.dur);
+    document.getElementById('save-btn').textContent = 'Wijzigingen Opslaan';
+    document.getElementById('del-btn').style.display = 'block';
+  } else {
+    document.getElementById('add-title').textContent = 'Nieuwe Taak ✨';
+    document.getElementById('t-name').value  = '';
+    document.getElementById('t-freq').value  = 7;
+    setStar('diff', 3);
+    setStar('dur',  2);
+    document.getElementById('save-btn').textContent = 'Taak Opslaan';
+    document.getElementById('del-btn').style.display = 'none';
+  }
+  updatePtsPreview();
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-add').classList.add('active');
+  document.getElementById('nav-add').classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+//  TASKS
+// ══════════════════════════════════════════════════
+const URGENCY_ORDER = { overdue:0, soon:1, warning:2, good:3 };
+
+function renderTasks() {
+  const list = document.getElementById('tasks-list');
+  let tasks = [...S.tasks].sort((a,b) => {
+    const d = URGENCY_ORDER[urgency(a)] - URGENCY_ORDER[urgency(b)];
+    return d !== 0 ? d : a.name.localeCompare(b.name);
+  });
+
+  if (S.filter !== 'all') {
+    const map = { overdue:['overdue'], soon:['soon','warning'], good:['good'] };
+    tasks = tasks.filter(t => (map[S.filter]||[]).includes(urgency(t)));
+  }
+
+  if (!tasks.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${S.tasks.length ? '✅' : '🏠'}</div>
+      <h3>${S.tasks.length ? 'Geen taken hier' : 'Nog geen taken!'}</h3>
+      <p>${S.tasks.length ? 'Pas het filter aan om meer taken te zien.' : 'Tik op ➕ om je eerste taak toe te voegen.'}</p>
+    </div>`;
+    return;
+  }
+
+  const incoming = S.challenges.filter(c => c.to === S.me && c.status === 'pending');
+  const chalMap  = Object.fromEntries(incoming.map(c => [c.taskId, c]));
+
+  list.innerHTML = tasks.map(task => {
+    const u   = urgency(task);
+    const pts = calcPts(task.diff, task.dur);
+    const chal = chalMap[task.id];
+
+    return `<div class="task-card u-${u}${chal?' challenged':''}">
+      ${chal ? `<div class="challenge-flag">⚡</div>` : ''}
+      <div class="tc-top">
+        <div class="tc-name">${task.name}</div>
+        <div class="tc-pts">${pts}${chal?` <span class="tc-challenge-pts">+${chal.bonus}⚡</span>`:''} pts</div>
+      </div>
+      <div class="tc-meta">
+        <div class="tc-meta-item">⚡ <span class="stars-filled">${stars(task.diff)}</span></div>
+        <div class="tc-meta-item">⏱️ <span class="stars-filled">${stars(task.dur)}</span></div>
+        <div class="tc-meta-item">🔄 ${freqLabel(task.freq)}</div>
+      </div>
+      <div class="urgency-tag u-${u}">${urgencyLabel(u, task)}</div>
+      <div class="tc-actions">
+        <button class="btn-complete" onclick="promptComplete('${task.id}')">✅ Volbracht!</button>
+        <button class="btn-edit" onclick="openAddView('${task.id}')">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(f, btn) {
+  S.filter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderTasks();
+}
+
+// ══════════════════════════════════════════════════
+//  COMPLETE TASK
+// ══════════════════════════════════════════════════
+function promptComplete(taskId) {
+  const task = S.tasks.find(t => t.id === taskId);
+  const pts  = calcPts(task.diff, task.dur);
+  const chals = S.challenges.filter(c => c.to === S.me && c.status === 'pending' && c.taskId === taskId);
+  const bonus = chals.reduce((s,c) => s + c.bonus, 0);
+  const total = pts + bonus;
+
+  S.pendingTaskId = taskId;
+  document.getElementById('cm-title').textContent  = task.name;
+  document.getElementById('cm-emoji').textContent  = bonus ? '⚡🎊' : '🎊';
+  document.getElementById('cm-pts').textContent    = pts;
+
+  if (bonus > 0) {
+    document.getElementById('cm-bonus').textContent = `+ ${bonus} bonus pts ⚡`;
+    document.getElementById('cm-bonus').style.display = 'block';
+    document.getElementById('cm-total').textContent = `= ${total} totaal!`;
+    document.getElementById('cm-total').style.display = 'block';
+  } else {
+    document.getElementById('cm-bonus').style.display = 'none';
+    document.getElementById('cm-total').style.display = 'none';
+  }
+  openOverlay('complete');
+}
+
+function confirmComplete() {
+  const taskId = S.pendingTaskId;
+  if (!taskId) return;
+  const task  = S.tasks.find(t => t.id === taskId);
+  const pts   = calcPts(task.diff, task.dur);
+  const chals = S.challenges.filter(c => c.to === S.me && c.status === 'pending' && c.taskId === taskId);
+  const bonus = chals.reduce((s,c) => s + c.bonus, 0);
+  const total = pts + bonus;
+
+  S.users[S.me].monthlyPoints += total;
+  S.users[S.me].totalPoints   += total;
+  task.lastDone = new Date().toISOString();
+  chals.forEach(c => c.status = 'completed');
+
+  save();
+  closeOverlay('complete');
+  updateHeader();
+  renderTasks();
+  showPtsPopup(total);
+}
+
+function showPtsPopup(pts) {
+  const el = document.createElement('div');
+  el.className = 'pts-popup';
+  el.textContent = `+${pts} ⭐`;
+  el.style.left  = (20 + Math.random()*60) + '%';
+  el.style.top   = '38%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1700);
+}
+
+// ══════════════════════════════════════════════════
+//  ADD / EDIT TASK
+// ══════════════════════════════════════════════════
+function setStar(type, val) {
+  S[type] = val;
+  document.querySelectorAll(`#pick-${type} .star-btn`).forEach(b => {
+    b.classList.toggle('on', +b.dataset.v === val);
+  });
+  updatePtsPreview();
+}
+
+function setFreq(days) {
+  document.getElementById('t-freq').value = days;
+  updatePtsPreview();
+}
+
+function updatePtsPreview() {
+  document.getElementById('pts-prev').textContent = calcPts(S.diff||3, S.dur||2);
+}
+
+function saveTask() {
+  const name = document.getElementById('t-name').value.trim();
+  if (!name) { alert('Geef de taak een naam!'); return; }
+  const freq = Math.max(1, parseInt(document.getElementById('t-freq').value)||7);
+
+  if (S.editId) {
+    const t = S.tasks.find(x => x.id === S.editId);
+    t.name = name; t.diff = S.diff; t.dur = S.dur; t.freq = freq;
+  } else {
+    S.tasks.push({ id: uid(), name, diff: S.diff, dur: S.dur, freq, lastDone: null });
+  }
+  save();
+  setView('tasks', document.getElementById('nav-tasks'));
+}
+
+function deleteTask() {
+  if (!S.editId) return;
+  if (!confirm('Taak verwijderen?')) return;
+  S.tasks      = S.tasks.filter(t => t.id !== S.editId);
+  S.challenges = S.challenges.filter(c => c.taskId !== S.editId);
+  save();
+  setView('tasks', document.getElementById('nav-tasks'));
+}
+
+// ══════════════════════════════════════════════════
+//  CHALLENGES
+// ══════════════════════════════════════════════════
+function renderChallenges() {
+  const me = S.me, them = other();
+  const theirUser = S.users[them];
+
+  // Task select
+  const sel = document.getElementById('chal-task');
+  sel.innerHTML = '<option value="">Kies een taak…</option>' +
+    S.tasks.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+  // Incoming
+  const incoming = S.challenges.filter(c => c.to === me && c.status === 'pending');
+  const inEl = document.getElementById('chal-incoming');
+  inEl.innerHTML = incoming.length ? incoming.map(c => {
+    const task = S.tasks.find(t => t.id === c.taskId);
+    const dLeft = Math.ceil((new Date(c.deadline) - Date.now()) / 86400000);
+    return `<div class="chal-card incoming">
+      <div class="chal-card-top">
+        <span class="chal-from">${theirUser.avatar} ${theirUser.name} daagt je uit!</span>
+        <span class="chal-bonus">+${c.bonus} pts ⚡</span>
+      </div>
+      <div class="chal-task">${task ? task.name : '?'}</div>
+      <div class="chal-status">⏳ Nog ${dLeft} dag${dLeft!==1?'en':''}</div>
+    </div>`;
+  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Geen actieve uitdagingen voor jou.</p>`;
+
+  // Outgoing
+  const outgoing = S.challenges.filter(c => c.from === me);
+  const outEl = document.getElementById('chal-outgoing');
+  const stClr = { pending:'var(--yellow)', completed:'var(--green)', expired:'var(--red)' };
+  const stTxt = { pending:'⏳ In afwachting', completed:'✅ Volbracht!', expired:'❌ Verlopen' };
+  outEl.innerHTML = outgoing.length ? outgoing.map(c => {
+    const task = S.tasks.find(t => t.id === c.taskId);
+    return `<div class="chal-card">
+      <div class="chal-card-top">
+        <span class="chal-from">Naar ${theirUser.avatar} ${theirUser.name}</span>
+        <span class="chal-bonus" style="color:${stClr[c.status]}">+${c.bonus} pts</span>
+      </div>
+      <div class="chal-task">${task ? task.name : '?'}</div>
+      <div class="chal-status" style="color:${stClr[c.status]}">${stTxt[c.status]}</div>
+    </div>`;
+  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Nog geen challenges verstuurd.</p>`;
+}
+
+function sendChallenge() {
+  const taskId = document.getElementById('chal-task').value;
+  if (!taskId) { alert('Kies een taak!'); return; }
+  const bonus = Math.max(10, parseInt(document.getElementById('chal-bonus').value)||50);
+  const days  = Math.max(1, parseInt(document.getElementById('chal-days').value)||3);
+  const dl    = new Date(); dl.setDate(dl.getDate() + days);
+
+  S.challenges.push({
+    id: uid(), from: S.me, to: other(), taskId, bonus,
+    deadline: dl.toISOString(), status: 'pending'
+  });
+  save();
+  renderChallenges();
+  updateHeader();
+  const task = S.tasks.find(t => t.id === taskId);
+  alert(`⚡ Challenge verstuurd!\n"${task.name}" voor ${bonus} bonus punten!`);
+}
+
+// ══════════════════════════════════════════════════
+//  LEADERBOARD
+// ══════════════════════════════════════════════════
+function renderLeaderboard() {
+  document.getElementById('lb-month').textContent = monthName();
+
+  const pj = S.users.pieterjan, ce = S.users.celine;
+  const pjP = pj.monthlyPoints, ceP = ce.monthlyPoints;
+  const pjLeads = pjP >= ceP;
+  const max = Math.max(pjP, ceP, 1);
+
+  document.getElementById('lb-podium').innerHTML = `
+    <div class="podium-card ${pjLeads && pjP>0 ? 'crown-card':''}">
+      ${pjLeads && pjP>0 ? '<div class="pod-crown">👑</div>':' '}
+      <div class="pod-avatar">${pj.avatar}</div>
+      <div class="pod-name">Pieterjan</div>
+      <div class="pod-pts">${pjP}</div>
+      <div class="pod-label">Punten</div>
+    </div>
+    <div class="podium-card ${!pjLeads && ceP>0 ? 'crown-card':''}">
+      ${!pjLeads && ceP>0 ? '<div class="pod-crown">👑</div>':' '}
+      <div class="pod-avatar">${ce.avatar}</div>
+      <div class="pod-name">Céline</div>
+      <div class="pod-pts">${ceP}</div>
+      <div class="pod-label">Punten</div>
+    </div>
+  `;
+
+  document.getElementById('lb-bars').innerHTML = `
+    <div class="progress-block">
+      <div class="pb-row">
+        <span class="pb-who">${pj.avatar} Pieterjan</span>
+        <span class="pb-val">${pjP} pts</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(pjP/max*100).toFixed(1)}%;background:var(--blue)"></div></div>
+    </div>
+    <div class="progress-block">
+      <div class="pb-row">
+        <span class="pb-who">${ce.avatar} Céline</span>
+        <span class="pb-val">${ceP} pts</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${(ceP/max*100).toFixed(1)}%;background:var(--purple)"></div></div>
+    </div>
+  `;
+
+  const histEl = document.getElementById('lb-history');
+  histEl.innerHTML = S.history.length ? S.history.map(h => {
+    const w = S.users[h.winner];
+    return `<div class="hist-item">
+      <div class="hist-info">
+        <div class="hist-month">${h.label||h.month}</div>
+        <div class="hist-scores">${pj.name}: ${h.scores.pieterjan} — ${ce.name}: ${h.scores.celine}</div>
+      </div>
+      <div class="hist-winner">${w.avatar} 👑</div>
+    </div>`;
+  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Nog geen historiek. Speel door tot einde van de maand!</p>`;
+}
+
+// ══════════════════════════════════════════════════
+//  AVATAR PICKER
+// ══════════════════════════════════════════════════
+function openAvatarPicker(userId) {
+  S.avatarFor = userId;
+  const cur = S.users[userId].avatar;
+  document.getElementById('av-grid').innerHTML = AVATARS.map(a =>
+    `<div class="av-opt${a===cur?' on':''}" onclick="pickAvatar('${a}',this)">${a}</div>`
+  ).join('');
+  openOverlay('avatar');
+}
+
+function pickAvatar(av, el) {
+  document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  S.users[S.avatarFor].avatar = av;
+  save();
+  document.getElementById('login-av-' + S.avatarFor).textContent = av;
+  if (S.me) updateHeader();
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════════
+function openOverlay(name)  { document.getElementById('overlay-' + name).classList.add('open'); }
+function closeOverlay(name) {
+  document.getElementById('overlay-' + name).classList.remove('open');
+  if (name === 'complete') S.pendingTaskId = null;
+  if (name === 'avatar')   S.avatarFor = null;
+}
+
+// ══════════════════════════════════════════════════
+//  LIVE UPDATES ON INPUTS
+// ══════════════════════════════════════════════════
+document.getElementById('t-freq').addEventListener('input', updatePtsPreview);
+
+// ══════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════
+// Register service worker (PWA offline support)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+
+load();
+// Sync login screen avatars
+document.getElementById('login-av-pieterjan').textContent = S.users.pieterjan.avatar;
+document.getElementById('login-av-celine').textContent    = S.users.celine.avatar;
+</script>
+</body>
+</html>
