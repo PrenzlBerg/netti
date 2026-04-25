@@ -1,21 +1,31 @@
-// Service Worker — Thuis Quest
-const CACHE = 'thuisquest-v3';
-const ASSETS = ['./', './index.html', './manifest.json'];
+// Service Worker — Thuis Quest (network-first)
+const CACHE = 'thuisquest-v4';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => caches.delete(k)))
+    )
+  );
   self.clients.claim();
 });
 
+// Network-first: altijd vers van de server, cache enkel als fallback
 self.addEventListener('fetch', e => {
+  if (e.request.url.includes('googleapis') || e.request.url.includes('firebase') || e.request.url.includes('gstatic')) {
+    return; // Firebase/fonts niet cachen
+  }
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    fetch(e.request)
+      .then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
