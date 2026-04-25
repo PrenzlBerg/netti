@@ -3,462 +3,619 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Thuis Quest ✨</title>
-  <!-- PWA -->
+  <title>Thuis Quest</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0D0D1A">
+  <meta name="theme-color" content="#080810">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Thuis Quest">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <style>
     :root {
       --yellow:  #FFD02F;
       --blue:    #2D9BF0;
-      --green:   #49C576;
+      --green:   #3EC96B;
       --red:     #F24726;
       --purple:  #9B5DE5;
       --orange:  #FF8C42;
-      --bg:      #0D0D1A;
-      --bg2:     #13132A;
-      --card:    rgba(255,255,255,0.04);
-      --card-b:  rgba(255,255,255,0.08);
+      --bg:      #080810;
+      --bg2:     #0f0f1e;
+      --bg3:     #161628;
+      --glass:   rgba(255,255,255,0.05);
+      --glass-b: rgba(255,255,255,0.10);
       --text:    #FFFFFF;
-      --text2:   #8B8BB0;
-      --r:       16px;
-      --r-sm:    10px;
+      --text2:   #7878a0;
+      --r:       18px;
+      --r-sm:    12px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-
-    #root {
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      max-width: 500px;
-      margin: 0 auto;
-      position: relative;
+    html { height: 100%; }
+    body {
+      height: 100%; min-height: 100dvh;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg); color: var(--text);
       overflow: hidden;
     }
 
-    /* SCREENS */
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    #root {
+      position: relative; z-index: 1;
+      height: 100dvh;
+      display: flex; flex-direction: column;
+      max-width: 500px; margin: 0 auto;
+      overflow: hidden;
+    }
+
+    /* ── SCREENS ── */
     .screen { display: none; flex-direction: column; height: 100%; overflow: hidden; }
     .screen.active { display: flex; }
 
-    /* LOGIN */
+    /* ── LOGIN ── */
     #login {
       background:
-        radial-gradient(ellipse at 20% 10%, rgba(45,155,240,.25) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 90%, rgba(155,93,229,.2) 0%, transparent 55%),
+        radial-gradient(ellipse at 15% 15%, rgba(45,155,240,.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 85%, rgba(155,93,229,.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(62,201,107,.08) 0%, transparent 60%),
         var(--bg);
-      justify-content: center; align-items: center; padding: 32px 24px; gap: 36px;
+      justify-content: center; align-items: center;
+      padding: 32px 28px; gap: 40px;
     }
-    .login-logo { text-align: center; }
-    .login-logo h1 {
-      font-size: 48px; font-weight: 900; line-height: 1;
-      background: linear-gradient(135deg, var(--yellow) 0%, var(--blue) 100%);
+    .login-brand { text-align: center; }
+    .login-brand h1 {
+      font-size: 52px; font-weight: 900; line-height: 1; letter-spacing: -2px;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--blue) 55%, var(--purple) 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .login-logo .tagline { color: var(--text2); margin-top: 8px; font-size: 16px; font-weight: 500; }
-    .user-cards { display: flex; gap: 16px; width: 100%; }
-    .user-card {
-      flex: 1; background: var(--card); border: 1.5px solid var(--card-b); border-radius: 24px;
-      padding: 28px 16px; text-align: center; cursor: pointer;
-      transition: all .2s cubic-bezier(.34,1.56,.64,1);
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    .login-brand p { color: var(--text2); margin-top: 10px; font-size: 16px; font-weight: 500; }
+
+    .login-cards { display: flex; gap: 14px; width: 100%; }
+    .login-card {
+      flex: 1; border-radius: 24px; padding: 28px 14px 24px;
+      text-align: center; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      position: relative; overflow: hidden;
+      transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+      border: 1.5px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
     }
-    .user-card.pj:hover, .user-card.pj:active { border-color: var(--blue); box-shadow: 0 12px 40px rgba(45,155,240,.25); transform: translateY(-6px); }
-    .user-card.ce:hover, .user-card.ce:active { border-color: var(--purple); box-shadow: 0 12px 40px rgba(155,93,229,.25); transform: translateY(-6px); }
-    .user-avatar { font-size: 56px; line-height: 1; }
-    .user-name { font-weight: 800; font-size: 18px; }
-    .change-avatar-btn {
+    .login-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 24px;
+      background: linear-gradient(160deg, rgba(255,255,255,.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .login-card.pj { box-shadow: 0 0 40px rgba(45,155,240,.15); border-color: rgba(45,155,240,.25); }
+    .login-card.ce { box-shadow: 0 0 40px rgba(155,93,229,.15); border-color: rgba(155,93,229,.25); }
+    .login-card:active { transform: scale(.97); }
+    .login-card:hover { transform: translateY(-4px); }
+    .login-card.pj:hover { box-shadow: 0 12px 50px rgba(45,155,240,.3); }
+    .login-card.ce:hover { box-shadow: 0 12px 50px rgba(155,93,229,.3); }
+    .lc-av { font-size: 60px; line-height: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
+    .lc-name { font-size: 18px; font-weight: 800; }
+    .lc-pts { font-size: 13px; color: var(--text2); font-weight: 600; }
+    .lc-pts span { color: var(--yellow); font-weight: 700; }
+    .lc-av-btn {
       font-size: 11px; color: var(--text2); background: rgba(255,255,255,.07);
-      border: 1px solid var(--card-b); border-radius: 20px; padding: 5px 12px;
+      border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 5px 12px;
       cursor: pointer; font-family: inherit; font-weight: 600;
     }
 
-    /* APP SHELL */
-    .app-header { padding: 14px 20px 12px; background: var(--bg2); border-bottom: 1px solid var(--card-b); flex-shrink: 0; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .current-user { display: flex; align-items: center; gap: 10px; }
-    .cur-avatar { font-size: 30px; }
-    .cur-name { font-weight: 800; font-size: 17px; }
-    .cur-pts { font-size: 12px; color: var(--text2); margin-top: 1px; }
-    .cur-pts span { color: var(--yellow); font-weight: 700; }
-    .switch-btn {
-      background: rgba(255,255,255,.07); border: 1px solid var(--card-b); border-radius: 10px;
-      color: var(--text2); padding: 7px 14px; cursor: pointer; font-size: 13px;
-      font-family: inherit; font-weight: 600;
-    }
-    .score-strip { display: flex; gap: 10px; background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 14px; }
-    .score-item { flex: 1; display: flex; align-items: center; gap: 8px; }
-    .sc-av { font-size: 22px; }
-    .sc-name { font-size: 11px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
-    .sc-pts { font-size: 20px; font-weight: 900; }
-    .sc-pts.leading { color: var(--yellow); }
-    .score-div { width: 1px; background: var(--card-b); }
+    /* ── APP SHELL ── */
+    #app { background: var(--bg); }
 
-    /* SYNC STATUS */
-    .sync-dot {
-      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
-      margin-left: 6px; vertical-align: middle;
+    /* Header */
+    .app-header {
+      background: linear-gradient(180deg, var(--bg2) 0%, rgba(15,15,30,.95) 100%);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      padding: 14px 20px 14px; flex-shrink: 0;
     }
-    .sync-dot.ok      { background: var(--green); }
-    .sync-dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
-    .sync-dot.error   { background: var(--red); }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-    /* NAV */
-    .app-nav { display: flex; background: var(--bg2); border-top: 1px solid var(--card-b); padding-bottom: env(safe-area-inset-bottom,0); flex-shrink: 0; }
-    .nav-btn {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      padding: 10px 4px 8px; cursor: pointer; border: none; background: none;
-      color: var(--text2); font-family: inherit; font-size: 10px; font-weight: 700;
-      gap: 2px; text-transform: uppercase; border-top: 2px solid transparent;
-      transition: color .15s, border-color .15s; position: relative;
+    .hdr-row { display: flex; align-items: center; gap: 12px; }
+    .hdr-av { font-size: 36px; line-height: 1; }
+    .hdr-info { flex: 1; }
+    .hdr-name { font-size: 20px; font-weight: 900; letter-spacing: -.5px; }
+    .hdr-pts { font-size: 13px; color: var(--text2); }
+    .hdr-pts span { color: var(--yellow); font-weight: 700; }
+    .hdr-actions { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.06); color: var(--text2); font-size: 17px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      position: relative; transition: all .15s;
     }
-    .nav-btn.active { color: var(--yellow); border-top-color: var(--yellow); }
-    .nav-icon { font-size: 22px; }
-    .nav-badge {
-      position: absolute; top: 6px; right: calc(50% - 18px);
+    .icon-btn:hover { background: rgba(255,255,255,.12); color: var(--text); }
+    .icon-btn .badge {
+      position: absolute; top: -4px; right: -4px;
       background: var(--red); color: #fff; font-size: 9px; font-weight: 900;
       min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* CONTENT */
-    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; }
-    .view { display: none; padding: 20px; padding-bottom: 12px; }
-    .view.active { display: block; }
-    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .view-title { font-size: 24px; font-weight: 900; }
+    .score-strip {
+      display: flex; gap: 8px; margin-top: 12px;
+      background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .sc-item { flex: 1; display: flex; align-items: center; gap: 8px; }
+    .sc-av { font-size: 20px; }
+    .sc-name { font-size: 11px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+    .sc-pts { font-size: 22px; font-weight: 900; }
+    .sc-pts.lead { color: var(--yellow); }
+    .sc-div { width: 1px; background: rgba(255,255,255,.08); }
 
-    /* TASKS */
-    .filters { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    /* Nav */
+    .app-nav {
+      display: flex; background: var(--bg2);
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding-bottom: env(safe-area-inset-bottom,0); flex-shrink: 0;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      padding: 10px 4px 8px; cursor: pointer; border: none; background: none;
+      color: var(--text2); font-family: inherit; font-size: 10px; font-weight: 700;
+      gap: 2px; text-transform: uppercase; letter-spacing: .3px;
+      border-top: 2px solid transparent; transition: color .15s, border-color .15s;
+      position: relative;
+    }
+    .nav-btn.active { color: var(--yellow); border-top-color: var(--yellow); }
+    .nav-icon { font-size: 22px; }
+    .nav-badge {
+      position: absolute; top: 5px; right: calc(50% - 20px);
+      background: var(--red); color: #fff; font-size: 9px; font-weight: 900;
+      min-width: 16px; height: 16px; border-radius: 8px; padding: 0 4px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Content */
+    .app-content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+    .view { display: none; padding: 20px; padding-bottom: 16px; }
+    .view.active { display: block; }
+    .view-title { font-size: 26px; font-weight: 900; letter-spacing: -.5px; margin-bottom: 16px; }
+
+    /* ── TASKS ── */
+    .filters {
+      display: flex; gap: 6px; margin-bottom: 16px;
+      overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
+    }
     .filters::-webkit-scrollbar { display: none; }
-    .filter-pill {
-      flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--card-b);
-      background: var(--card); color: var(--text2); font-size: 12px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
+    .fpill {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
+      color: var(--text2); font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: all .15s;
     }
-    .filter-pill.on { background: var(--yellow); color: #000; border-color: var(--yellow); }
-    .tasks-list { display: grid; gap: 12px; }
+    .fpill.on { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+    .tasks-list { display: grid; gap: 10px; }
+
+    /* Task card */
     .task-card {
-      background: var(--card); border: 1.5px solid var(--card-b); border-radius: var(--r);
-      padding: 16px 16px 14px 20px; position: relative; overflow: hidden;
+      border-radius: var(--r); overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(135deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.03) 100%);
+      backdrop-filter: blur(10px);
+      position: relative;
+      transition: transform .2s, border-color .2s;
     }
-    .task-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; }
-    .task-card.u-good    { border-color: rgba(73,197,118,.2); }
-    .task-card.u-good::before    { background: var(--green); }
-    .task-card.u-warning { border-color: rgba(255,208,47,.2); }
-    .task-card.u-warning::before { background: var(--yellow); }
-    .task-card.u-soon    { border-color: rgba(255,140,66,.3); }
-    .task-card.u-soon::before    { background: var(--orange); }
-    .task-card.u-overdue { border-color: rgba(242,71,38,.3); animation: pulseRed 2.5s infinite; }
-    .task-card.u-overdue::before { background: var(--red); }
-    .task-card.challenged { border-color: rgba(155,93,229,.4) !important; }
-    @keyframes pulseRed { 0%,100%{box-shadow:0 0 0 0 rgba(242,71,38,0)} 50%{box-shadow:0 0 0 6px rgba(242,71,38,.12)} }
-    .tc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
-    .tc-name { font-size: 16px; font-weight: 800; flex: 1; }
-    .tc-pts  { font-size: 14px; font-weight: 900; color: var(--yellow); white-space: nowrap; }
-    .tc-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .tc-meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); }
-    .stars-filled { color: var(--yellow); letter-spacing: -1px; }
-    .urgency-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-    .urgency-tag.u-good    { background: rgba(73,197,118,.15); color: var(--green); }
-    .urgency-tag.u-warning { background: rgba(255,208,47,.15); color: var(--yellow); }
-    .urgency-tag.u-soon    { background: rgba(255,140,66,.18); color: var(--orange); }
-    .urgency-tag.u-overdue { background: rgba(242,71,38,.15); color: var(--red); }
-    .tc-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .task-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.14); }
+    .task-card.done-card { opacity: .55; }
+
+    .task-inner { padding: 14px 16px 10px; }
+    .tc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+    .tc-name { font-size: 16px; font-weight: 800; flex: 1; letter-spacing: -.3px; }
+    .tc-pts  { font-size: 13px; font-weight: 900; color: var(--yellow); white-space: nowrap; }
+    .tc-challenge-pts { color: var(--purple); }
+
+    .tc-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .tc-tag {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,.07); border-radius: 8px;
+      padding: 3px 8px; font-size: 11px; color: var(--text2); font-weight: 600;
+    }
+    .tc-tag .stars { color: var(--yellow); letter-spacing: -1px; }
+
+    /* Urgency label */
+    .urgency-label { font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+
+    /* Continuous urgency bar */
+    .urgency-bar-track {
+      height: 5px; background: rgba(255,255,255,.06); border-radius: 0;
+      overflow: hidden;
+    }
+    .urgency-bar-fill {
+      height: 100%; border-radius: 0;
+      transition: width .4s ease, background .4s ease;
+    }
+
+    .tc-actions { display: flex; gap: 8px; padding: 10px 16px 14px; }
     .btn-complete {
       flex: 1; padding: 10px; border-radius: var(--r-sm); border: none;
-      background: var(--green); color: #000; font-weight: 800; font-size: 14px;
-      cursor: pointer; font-family: inherit; transition: opacity .15s, transform .1s;
+      font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit;
+      transition: opacity .15s, transform .1s;
     }
-    .btn-complete:active { transform: scale(.97); }
+    .btn-complete:active { transform: scale(.97); opacity: .85; }
     .btn-edit {
-      padding: 10px 13px; border-radius: var(--r-sm); border: 1px solid var(--card-b);
+      padding: 10px 13px; border-radius: var(--r-sm); border: 1px solid rgba(255,255,255,.1);
       background: rgba(255,255,255,.06); color: var(--text2); cursor: pointer; font-size: 16px;
+      transition: all .15s;
     }
-    .empty-state { text-align: center; padding: 48px 20px; color: var(--text2); }
-    .empty-icon  { font-size: 52px; margin-bottom: 12px; }
-    .empty-state h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-    .empty-state p  { font-size: 14px; line-height: 1.6; }
+    .btn-edit:hover { background: rgba(255,255,255,.12); }
 
-    /* ADD / EDIT */
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+    .empty-icon  { font-size: 56px; margin-bottom: 14px; }
+    .empty-state h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
+    .empty-state p  { font-size: 14px; line-height: 1.7; }
+
+    /* ── ADD / EDIT ── */
     .form-group { margin-bottom: 22px; }
-    .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 8px; }
+    .form-label {
+      display: block; font-size: 11px; font-weight: 800; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px;
+    }
     .form-input {
-      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid var(--card-b);
+      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.1);
       border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 16px;
       padding: 13px 15px; outline: none; transition: border-color .15s;
     }
-    .form-input:focus { border-color: var(--blue); }
+    .form-input:focus { border-color: var(--blue); background: rgba(45,155,240,.08); }
     .form-input::placeholder { color: #44446a; }
-    .star-picker { display: flex; gap: 8px; }
+    .form-select {
+      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.1);
+      border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 16px;
+      padding: 13px 15px; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+    select option { background: #161628; }
+
+    .star-picker { display: flex; gap: 6px; }
     .star-btn {
-      flex: 1; padding: 12px 4px; border-radius: var(--r-sm); border: 1.5px solid var(--card-b);
-      background: rgba(255,255,255,.05); color: var(--text2); font-size: 13px; font-weight: 800;
-      cursor: pointer; font-family: inherit; text-align: center;
+      flex: 1; padding: 12px 4px; border-radius: var(--r-sm);
+      border: 1.5px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05);
+      color: var(--text2); font-size: 13px; font-weight: 800;
+      cursor: pointer; font-family: inherit; text-align: center; transition: all .15s;
     }
+    .star-btn .sn { font-size: 15px; display: block; }
+    .star-btn .sl { font-size: 9px; display: block; margin-top: 2px; color: var(--text2); letter-spacing: .2px; }
     .star-btn.on { background: rgba(255,208,47,.15); border-color: var(--yellow); color: var(--yellow); }
-    .star-btn .sb-num { font-size: 16px; display: block; }
-    .star-btn .sb-label { font-size: 9px; color: var(--text2); display: block; margin-top: 2px; }
-    .star-btn.on .sb-label { color: rgba(255,208,47,.7); }
-    .quick-freqs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-    .qf-btn {
-      padding: 6px 12px; border-radius: 20px; border: 1px solid var(--card-b);
-      background: var(--card); color: var(--text2); font-size: 12px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-    }
-    .freq-row { display: flex; gap: 10px; }
-    .freq-num { width: 80px; text-align: center; }
+    .star-btn.on .sl { color: rgba(255,208,47,.6); }
+
     .pts-preview {
-      background: rgba(255,208,47,.08); border: 1.5px solid rgba(255,208,47,.25);
-      border-radius: var(--r-sm); padding: 14px 18px;
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,208,47,.08); border: 1.5px solid rgba(255,208,47,.2);
+      border-radius: var(--r-sm); padding: 14px 18px; margin-bottom: 24px;
     }
     .pts-preview-label { font-size: 13px; color: var(--text2); font-weight: 600; }
-    .pts-preview-val { font-size: 32px; font-weight: 900; color: var(--yellow); }
+    .pts-preview-val { font-size: 36px; font-weight: 900; color: var(--yellow); }
+
     .btn-primary {
       width: 100%; padding: 16px; border-radius: var(--r); border: none;
-      background: linear-gradient(135deg, var(--blue), var(--purple));
+      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
       color: #fff; font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      box-shadow: 0 4px 20px rgba(45,155,240,.3);
     }
-    .btn-primary:active { opacity: .85; }
+    .btn-primary:active { opacity: .85; transform: scale(.99); }
 
-    /* Delete button — two-tap confirm */
     .btn-danger {
       width: 100%; margin-top: 12px; padding: 14px; border-radius: var(--r);
-      border: 1.5px solid rgba(242,71,38,.35); background: rgba(242,71,38,.08);
+      border: 1.5px solid rgba(242,71,38,.3); background: rgba(242,71,38,.07);
       color: var(--red); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all .15s;
     }
-    .btn-danger.confirm-state { background: var(--red); color: #fff; border-color: var(--red); }
+    .btn-danger.armed { background: var(--red); color: #fff; border-color: var(--red); }
 
-    /* CHALLENGES */
-    .section-title { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
-    .challenges-block { margin-bottom: 28px; }
-    .chal-card { background: var(--card); border: 1.5px solid var(--card-b); border-radius: var(--r); padding: 16px; margin-bottom: 10px; }
-    .chal-card.incoming { border-color: rgba(155,93,229,.35); background: rgba(155,93,229,.05); }
-    .chal-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    /* ── CHALLENGES ── */
+    .section-lbl {
+      font-size: 11px; font-weight: 800; color: var(--text2);
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px; margin-top: 4px;
+    }
+    .chal-block { margin-bottom: 28px; }
+    .chal-card {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--r); padding: 16px; margin-bottom: 10px;
+    }
+    .chal-card.incoming { border-color: rgba(155,93,229,.35); background: rgba(155,93,229,.06); }
+    .chal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .chal-from { font-size: 12px; color: var(--text2); font-weight: 600; }
     .chal-bonus { font-size: 16px; font-weight: 900; color: var(--green); }
-    .chal-task  { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .chal-task { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
     .chal-status { font-size: 12px; color: var(--text2); }
-    .new-chal-form { background: rgba(255,255,255,.04); border: 1.5px solid var(--card-b); border-radius: var(--r); padding: 20px; }
-    .form-select {
-      width: 100%; background: rgba(255,255,255,.06); border: 1.5px solid var(--card-b);
-      border-radius: var(--r-sm); color: var(--text); font-family: inherit; font-size: 16px;
-      padding: 12px 14px; outline: none; appearance: none; -webkit-appearance: none;
+    .new-chal-box {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--r); padding: 20px;
     }
-    select option { background: #1a1a35; }
 
-    /* LEADERBOARD */
-    .lb-month { text-align: center; margin-bottom: 28px; }
-    .lb-month-label { font-size: 12px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
-    .lb-month-name { font-size: 28px; font-weight: 900; }
-    .podium { display: flex; gap: 14px; margin-bottom: 28px; }
-    .podium-card { flex: 1; background: var(--card); border: 1.5px solid var(--card-b); border-radius: 20px; padding: 22px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .podium-card.crown-card { border-color: var(--yellow); background: rgba(255,208,47,.07); }
-    .pod-crown { font-size: 26px; }
-    .pod-avatar { font-size: 40px; }
+    /* ── LEADERBOARD ── */
+    .lb-hero { text-align: center; margin-bottom: 28px; }
+    .lb-month-lbl { font-size: 11px; color: var(--text2); font-weight: 800; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+    .lb-month-name { font-size: 30px; font-weight: 900; letter-spacing: -.5px; }
+
+    .podium { display: flex; gap: 12px; margin-bottom: 28px; }
+    .pod-card {
+      flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 20px; padding: 22px 12px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: all .3s;
+    }
+    .pod-card.winning {
+      border-color: rgba(255,208,47,.4); background: rgba(255,208,47,.07);
+      box-shadow: 0 0 30px rgba(255,208,47,.12);
+    }
+    .pod-crown { font-size: 28px; line-height: 1; }
+    .pod-av { font-size: 42px; }
     .pod-name { font-size: 14px; font-weight: 800; }
-    .pod-pts { font-size: 32px; font-weight: 900; color: var(--yellow); }
-    .pod-label { font-size: 10px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
-    .progress-block { margin-bottom: 8px; }
+    .pod-pts { font-size: 34px; font-weight: 900; color: var(--yellow); }
+    .pod-lbl { font-size: 10px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+
+    .pb-block { margin-bottom: 12px; }
     .pb-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .pb-who { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
     .pb-val { font-size: 13px; font-weight: 800; color: var(--yellow); }
-    .progress-bar { height: 8px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
-    .progress-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.34,1.2,.64,1); }
-    .hist-item { background: var(--card); border: 1px solid var(--card-b); border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .pb-track { height: 8px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+    .pb-fill { height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.34,1.2,.64,1); }
+
+    .hist-item {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--r-sm); padding: 12px 16px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
     .hist-info { flex: 1; }
     .hist-month { font-size: 14px; font-weight: 700; }
     .hist-scores { font-size: 12px; color: var(--text2); margin-top: 2px; }
-    .hist-winner { font-size: 22px; }
+    .hist-winner { font-size: 24px; }
 
-    /* MODAL */
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: none; align-items: flex-end; justify-content: center; z-index: 100; backdrop-filter: blur(4px); }
+    /* ── MODALS / SHEETS ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.8);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 100; backdrop-filter: blur(6px);
+    }
     .overlay.open { display: flex; }
-    .sheet { background: var(--bg2); border-radius: 24px 24px 0 0; padding: 8px 24px 32px; width: 100%; max-width: 500px; max-height: 88vh; overflow-y: auto; border-top: 1px solid var(--card-b); animation: slideUp .3s cubic-bezier(.34,1.56,.64,1); }
+    .sheet {
+      background: var(--bg2); border-radius: 26px 26px 0 0;
+      padding: 8px 24px 32px; width: 100%; max-width: 500px;
+      max-height: 90dvh; overflow-y: auto;
+      border-top: 1px solid rgba(255,255,255,.1);
+      animation: slideUp .3s cubic-bezier(.34,1.4,.64,1);
+    }
     @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-    .sheet-handle { width: 40px; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; margin: 12px auto 20px; }
-    .sheet-title { font-size: 22px; font-weight: 900; margin-bottom: 16px; }
-    .avatar-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 20px; }
-    .av-opt { aspect-ratio: 1; font-size: 26px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 2px solid transparent; cursor: pointer; background: rgba(255,255,255,.05); transition: all .15s; }
-    .av-opt.on { border-color: var(--yellow); background: rgba(255,208,47,.15); }
-    .complete-big-pts { text-align: center; padding: 24px 0 8px; }
-    .complete-emoji { font-size: 56px; display: block; margin-bottom: 8px; }
-    .complete-pts-num { font-size: 52px; font-weight: 900; color: var(--yellow); display: block; }
-    .complete-pts-label { color: var(--text2); font-size: 14px; display: block; margin-top: 4px; }
-    .complete-bonus { font-size: 20px; font-weight: 800; color: var(--purple); margin-top: 8px; display: block; }
-    .complete-total { font-size: 28px; font-weight: 900; color: var(--green); margin-top: 4px; display: block; }
-    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-secondary { flex: 1; padding: 14px; border-radius: var(--r); border: 1.5px solid var(--card-b); background: rgba(255,255,255,.07); color: var(--text); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .sheet-handle { width: 40px; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; margin: 12px auto 22px; }
+    .sheet-title { font-size: 22px; font-weight: 900; letter-spacing: -.5px; margin-bottom: 18px; }
 
-    /* TOAST */
+    /* Avatar grid */
+    .av-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 20px; }
+    .av-opt {
+      aspect-ratio: 1; font-size: 26px; display: flex; align-items: center; justify-content: center;
+      border-radius: 12px; border: 2px solid transparent; cursor: pointer;
+      background: rgba(255,255,255,.05); transition: all .15s;
+    }
+    .av-opt.on { border-color: var(--yellow); background: rgba(255,208,47,.15); transform: scale(1.1); }
+
+    /* Complete sheet */
+    .cm-hero { text-align: center; padding: 20px 0 12px; }
+    .cm-emoji { font-size: 60px; display: block; margin-bottom: 10px; }
+    .cm-pts-big { font-size: 56px; font-weight: 900; color: var(--yellow); display: block; line-height: 1; }
+    .cm-pts-lbl { font-size: 14px; color: var(--text2); display: block; margin-top: 6px; }
+    .cm-bonus { font-size: 22px; font-weight: 800; color: var(--purple); display: block; margin-top: 10px; }
+    .cm-total { font-size: 30px; font-weight: 900; color: var(--green); display: block; margin-top: 4px; }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-secondary {
+      flex: 1; padding: 14px; border-radius: var(--r); border: 1.5px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.07); color: var(--text); font-family: inherit;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+    }
+
+    /* Settings sheet */
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .sr-label { font-size: 15px; font-weight: 600; }
+    .sr-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .sr-btn {
+      padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.08); color: var(--text); font-family: inherit;
+      font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .sr-btn.danger { border-color: rgba(242,71,38,.3); color: var(--red); background: rgba(242,71,38,.08); }
+
+    /* Notifications sheet */
+    .notif-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-icon { font-size: 28px; }
+    .notif-text { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .notif-time { font-size: 11px; color: var(--text2); }
+    .notif-empty { text-align: center; padding: 32px 0; color: var(--text2); font-size: 14px; }
+
+    /* Toast */
     .toast {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-      background: var(--bg2); border: 1.5px solid var(--card-b); border-radius: 14px;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-120px);
+      background: var(--bg3); border: 1.5px solid rgba(255,255,255,.12); border-radius: 14px;
       padding: 12px 20px; font-size: 14px; font-weight: 600; z-index: 300;
-      transition: transform .3s cubic-bezier(.34,1.56,.64,1); max-width: 320px;
-      text-align: center; pointer-events: none; white-space: nowrap;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      max-width: 320px; text-align: center; pointer-events: none;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
     .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.t-error   { border-color: var(--red);   color: var(--red); }
-    .toast.t-success { border-color: var(--green); color: var(--green); }
-    .toast.t-info    { border-color: var(--blue);  color: var(--blue); }
+    .toast.t-error   { border-color: rgba(242,71,38,.5);   color: var(--red); }
+    .toast.t-success { border-color: rgba(62,201,107,.5); color: var(--green); }
+    .toast.t-info    { border-color: rgba(45,155,240,.5);  color: var(--blue); }
 
-    /* POINTS POPUP */
-    .pts-popup { position: fixed; pointer-events: none; z-index: 200; font-size: 30px; font-weight: 900; color: var(--yellow); text-shadow: 0 2px 12px rgba(255,208,47,.5); animation: floatUp 1.6s ease-out forwards; }
-    @keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(.5)} 25%{opacity:1;transform:translateY(-24px) scale(1.25)} 100%{opacity:0;transform:translateY(-90px) scale(1)} }
+    /* Points popup */
+    .pts-popup {
+      position: fixed; pointer-events: none; z-index: 200;
+      font-size: 32px; font-weight: 900; color: var(--yellow);
+      text-shadow: 0 2px 16px rgba(255,208,47,.6);
+      animation: floatUp 1.8s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0%   { opacity:1; transform: translateY(0) scale(.4); }
+      20%  { opacity:1; transform: translateY(-20px) scale(1.3); }
+      100% { opacity:0; transform: translateY(-100px) scale(1); }
+    }
 
-    /* LOADING */
-    #loading-screen {
+    /* Loading */
+    #loading {
       position: fixed; inset: 0; background: var(--bg);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 16px; z-index: 999;
+      gap: 20px; z-index: 999;
     }
-    #loading-screen h2 { font-size: 32px; font-weight: 900; background: linear-gradient(135deg,var(--yellow),var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .spinner { width: 36px; height: 36px; border: 3px solid var(--card-b); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; }
+    #loading h2 {
+      font-size: 36px; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--yellow), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid rgba(255,255,255,.1);
+      border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
   </style>
 </head>
 <body>
 
-<!-- Loading -->
-<div id="loading-screen">
+<div id="loading">
   <h2>Thuis Quest</h2>
   <div class="spinner"></div>
 </div>
 
 <div id="root" style="display:none">
 
-  <!-- LOGIN -->
+  <!-- ═══════════════════════════════════ LOGIN ═══ -->
   <div id="login" class="screen active">
-    <div class="login-logo">
+    <div class="login-brand">
       <h1>Thuis Quest</h1>
-      <div class="tagline">Huishouden als avontuur 🏆</div>
+      <p>Wie ben jij?</p>
     </div>
-    <div class="user-cards">
-      <div class="user-card pj" onclick="login('pieterjan')">
-        <div class="user-avatar" id="login-av-pieterjan">🧔</div>
-        <div class="user-name">Pieterjan</div>
-        <button class="change-avatar-btn" onclick="event.stopPropagation();openAvatarPicker('pieterjan')">Avatar kiezen</button>
+    <div class="login-cards">
+      <div class="login-card pj" onclick="login('pieterjan')">
+        <div class="lc-av" id="lav-pj">🧔</div>
+        <div class="lc-name">Pieterjan</div>
+        <div class="lc-pts"><span id="lpts-pj">0</span> pts deze maand</div>
+        <button class="lc-av-btn" onclick="event.stopPropagation();openAvPicker('pieterjan')">Avatar ✦</button>
       </div>
-      <div class="user-card ce" onclick="login('celine')">
-        <div class="user-avatar" id="login-av-celine">👩‍🦱</div>
-        <div class="user-name">Céline</div>
-        <button class="change-avatar-btn" onclick="event.stopPropagation();openAvatarPicker('celine')">Avatar kiezen</button>
+      <div class="login-card ce" onclick="login('celine')">
+        <div class="lc-av" id="lav-ce">👩‍🦱</div>
+        <div class="lc-name">Céline</div>
+        <div class="lc-pts"><span id="lpts-ce">0</span> pts deze maand</div>
+        <button class="lc-av-btn" onclick="event.stopPropagation();openAvPicker('celine')">Avatar ✦</button>
       </div>
     </div>
   </div>
 
-  <!-- APP -->
+  <!-- ═══════════════════════════════════ APP ═══ -->
   <div id="app" class="screen">
+
     <div class="app-header">
-      <div class="header-top">
-        <div class="current-user">
-          <div class="cur-avatar" id="h-avatar"></div>
-          <div>
-            <div class="cur-name" id="h-name"></div>
-            <div class="cur-pts">Deze maand: <span id="h-pts">0</span> pts <span class="sync-dot loading" id="sync-dot"></span></div>
-          </div>
+      <div class="hdr-row">
+        <div class="hdr-av" id="h-av"></div>
+        <div class="hdr-info">
+          <div class="hdr-name" id="h-name"></div>
+          <div class="hdr-pts">Deze maand: <span id="h-pts">0</span> pts</div>
         </div>
-        <button class="switch-btn" onclick="logout()">⇄ Wissel</button>
+        <div class="hdr-actions">
+          <button class="icon-btn" id="notif-btn" onclick="openOverlay('notifs')" title="Meldingen">🔔</button>
+          <button class="icon-btn" onclick="openOverlay('settings')" title="Instellingen">⚙️</button>
+        </div>
       </div>
       <div class="score-strip">
-        <div class="score-item">
-          <div class="sc-av" id="sc-av-pj">🧔</div>
+        <div class="sc-item">
+          <div class="sc-av" id="sc-av-pj"></div>
           <div><div class="sc-name">Pieterjan</div><div class="sc-pts" id="sc-pts-pj">0</div></div>
         </div>
-        <div class="score-div"></div>
-        <div class="score-item">
-          <div class="sc-av" id="sc-av-ce">👩‍🦱</div>
+        <div class="sc-div"></div>
+        <div class="sc-item">
+          <div class="sc-av" id="sc-av-ce"></div>
           <div><div class="sc-name">Céline</div><div class="sc-pts" id="sc-pts-ce">0</div></div>
         </div>
       </div>
     </div>
 
     <div class="app-content">
-      <!-- TASKS -->
+
+      <!-- TAKEN -->
       <div id="view-tasks" class="view active">
-        <div class="view-header"><div class="view-title">Taken 🏠</div></div>
+        <div class="view-title">Taken 🏠</div>
         <div class="filters">
-          <button class="filter-pill on" onclick="setFilter('all',this)">Alle</button>
-          <button class="filter-pill" onclick="setFilter('overdue',this)">🔴 Te laat</button>
-          <button class="filter-pill" onclick="setFilter('soon',this)">🟠 Binnenkort</button>
-          <button class="filter-pill" onclick="setFilter('good',this)">🟢 Op schema</button>
+          <button class="fpill on" onclick="setFilter('all',this)">Alle</button>
+          <button class="fpill" onclick="setFilter('overdue',this)">🔴 Te laat</button>
+          <button class="fpill" onclick="setFilter('due',this)">🟡 Binnenkort</button>
+          <button class="fpill" onclick="setFilter('good',this)">🟢 Op schema</button>
+          <button class="fpill" onclick="setFilter('onetime',this)">⭐ Eénmalig</button>
         </div>
         <div class="tasks-list" id="tasks-list"></div>
       </div>
 
-      <!-- ADD/EDIT -->
+      <!-- TOEVOEGEN -->
       <div id="view-add" class="view">
-        <div class="view-header"><div class="view-title" id="add-title">Nieuwe Taak ✨</div></div>
+        <div class="view-title" id="add-title">Nieuwe Taak ✨</div>
         <div class="form-group">
-          <label class="form-label">Naam van de taak</label>
+          <label class="form-label">Naam</label>
           <input class="form-input" id="t-name" type="text" placeholder="bijv. Kattenbak kuisen…">
         </div>
         <div class="form-group">
           <label class="form-label">Moeilijkheid ⚡</label>
           <div class="star-picker" id="pick-diff">
-            <button class="star-btn" data-v="1" onclick="setStar('diff',1)"><span class="sb-num">1★</span><span class="sb-label">Makkelijk</span></button>
-            <button class="star-btn" data-v="2" onclick="setStar('diff',2)"><span class="sb-num">2★</span><span class="sb-label">Licht</span></button>
-            <button class="star-btn" data-v="3" onclick="setStar('diff',3)"><span class="sb-num">3★</span><span class="sb-label">Gemiddeld</span></button>
-            <button class="star-btn" data-v="4" onclick="setStar('diff',4)"><span class="sb-num">4★</span><span class="sb-label">Zwaar</span></button>
-            <button class="star-btn" data-v="5" onclick="setStar('diff',5)"><span class="sb-num">5★</span><span class="sb-label">Extreem</span></button>
+            <button class="star-btn" data-v="1" onclick="setStar('diff',1)"><span class="sn">1★</span><span class="sl">Makkelijk</span></button>
+            <button class="star-btn" data-v="2" onclick="setStar('diff',2)"><span class="sn">2★</span><span class="sl">Licht</span></button>
+            <button class="star-btn" data-v="3" onclick="setStar('diff',3)"><span class="sn">3★</span><span class="sl">Gemiddeld</span></button>
+            <button class="star-btn" data-v="4" onclick="setStar('diff',4)"><span class="sn">4★</span><span class="sl">Zwaar</span></button>
+            <button class="star-btn" data-v="5" onclick="setStar('diff',5)"><span class="sn">5★</span><span class="sl">Extreem</span></button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Tijdsduur ⏱️</label>
           <div class="star-picker" id="pick-dur">
-            <button class="star-btn" data-v="1" onclick="setStar('dur',1)"><span class="sb-num">1★</span><span class="sb-label">&lt;5 min</span></button>
-            <button class="star-btn" data-v="2" onclick="setStar('dur',2)"><span class="sb-num">2★</span><span class="sb-label">~15 min</span></button>
-            <button class="star-btn" data-v="3" onclick="setStar('dur',3)"><span class="sb-num">3★</span><span class="sb-label">~30 min</span></button>
-            <button class="star-btn" data-v="4" onclick="setStar('dur',4)"><span class="sb-num">4★</span><span class="sb-label">~1 uur</span></button>
-            <button class="star-btn" data-v="5" onclick="setStar('dur',5)"><span class="sb-num">5★</span><span class="sb-label">&gt;1 uur</span></button>
+            <button class="star-btn" data-v="1" onclick="setStar('dur',1)"><span class="sn">1★</span><span class="sl">&lt;5 min</span></button>
+            <button class="star-btn" data-v="2" onclick="setStar('dur',2)"><span class="sn">2★</span><span class="sl">15 min</span></button>
+            <button class="star-btn" data-v="3" onclick="setStar('dur',3)"><span class="sn">3★</span><span class="sl">30 min</span></button>
+            <button class="star-btn" data-v="4" onclick="setStar('dur',4)"><span class="sn">4★</span><span class="sl">1 uur</span></button>
+            <button class="star-btn" data-v="5" onclick="setStar('dur',5)"><span class="sn">5★</span><span class="sl">&gt;1 uur</span></button>
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Frequentie</label>
-          <div class="quick-freqs">
-            <button class="qf-btn" onclick="setFreq(1)">Dagelijks</button>
-            <button class="qf-btn" onclick="setFreq(2)">Om de 2 dagen</button>
-            <button class="qf-btn" onclick="setFreq(7)">Wekelijks</button>
-            <button class="qf-btn" onclick="setFreq(14)">2-wekelijks</button>
-            <button class="qf-btn" onclick="setFreq(30)">Maandelijks</button>
-          </div>
-          <div class="freq-row">
-            <input class="form-input freq-num" id="t-freq" type="number" min="1" value="7">
-            <input class="form-input" value="dagen" readonly style="flex:1;color:var(--text2)">
-          </div>
+          <select class="form-select" id="t-freq" onchange="updatePtsPreview()">
+            <option value="0.5">2× per dag</option>
+            <option value="1">Dagelijks</option>
+            <option value="2">Om de 2 dagen</option>
+            <option value="7" selected>Wekelijks</option>
+            <option value="14">2-wekelijks</option>
+            <option value="30">Maandelijks</option>
+            <option value="null">Eénmalig (geen herhaling)</option>
+          </select>
         </div>
         <div class="pts-preview">
           <span class="pts-preview-label">Punten per voltooiing</span>
-          <span class="pts-preview-val" id="pts-prev">0</span>
+          <span class="pts-preview-val" id="pts-prev">48</span>
         </div>
         <button class="btn-primary" id="save-btn" onclick="saveTask()">Taak Opslaan</button>
-        <button class="btn-danger" id="del-btn" style="display:none" onclick="deleteTap()">🗑 Taak Verwijderen</button>
+        <button class="btn-danger" id="del-btn" style="display:none" onclick="deleteTap()">🗑 Verwijderen</button>
       </div>
 
       <!-- CHALLENGES -->
       <div id="view-challenges" class="view">
-        <div class="view-header"><div class="view-title">Challenges ⚡</div></div>
-        <div class="challenges-block">
-          <div class="section-title">Uitdagingen voor jou</div>
-          <div id="chal-incoming"></div>
+        <div class="view-title">Challenges ⚡</div>
+        <div class="chal-block">
+          <div class="section-lbl">Uitdagingen voor jou</div>
+          <div id="chal-in"></div>
         </div>
-        <div class="challenges-block">
-          <div class="section-title">Stuur een challenge</div>
-          <div class="new-chal-form">
+        <div class="chal-block">
+          <div class="section-lbl">Nieuwe challenge sturen</div>
+          <div class="new-chal-box">
             <div class="form-group">
               <label class="form-label">Taak</label>
               <select class="form-select" id="chal-task"></select>
@@ -468,32 +625,33 @@
               <input class="form-input" id="chal-bonus" type="number" min="10" max="999" value="50">
             </div>
             <div class="form-group">
-              <label class="form-label">Deadline (in dagen)</label>
+              <label class="form-label">Deadline (dagen)</label>
               <input class="form-input" id="chal-days" type="number" min="1" max="30" value="3">
             </div>
             <button class="btn-primary" onclick="sendChallenge()">⚡ Challenge Sturen</button>
           </div>
         </div>
-        <div class="challenges-block">
-          <div class="section-title">Verstuurde challenges</div>
-          <div id="chal-outgoing"></div>
+        <div class="chal-block">
+          <div class="section-lbl">Verstuurd</div>
+          <div id="chal-out"></div>
         </div>
       </div>
 
-      <!-- LEADERBOARD -->
+      <!-- SCORES -->
       <div id="view-leaderboard" class="view">
-        <div class="lb-month">
-          <div class="lb-month-label">Huidig Maand</div>
+        <div class="lb-hero">
+          <div class="lb-month-lbl">Huidig maand</div>
           <div class="lb-month-name" id="lb-month"></div>
         </div>
         <div class="podium" id="lb-podium"></div>
         <div id="lb-bars"></div>
-        <div style="margin-top:24px">
-          <div class="section-title">Historiek 🏆</div>
-          <div id="lb-history"></div>
+        <div style="margin-top:28px">
+          <div class="section-lbl">Historiek 🏆</div>
+          <div id="lb-hist"></div>
         </div>
       </div>
-    </div>
+
+    </div><!-- end app-content -->
 
     <nav class="app-nav">
       <button class="nav-btn active" id="nav-tasks" onclick="setView('tasks',this)">
@@ -510,42 +668,79 @@
       </button>
     </nav>
   </div>
-</div>
 
-<!-- AVATAR MODAL -->
-<div class="overlay" id="overlay-avatar" onclick="if(event.target===this)closeOverlay('avatar')">
+</div><!-- end root -->
+
+<!-- ═══ AVATAR MODAL ═══ -->
+<div class="overlay" id="overlay-av" onclick="if(event.target===this)closeOverlay('av')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">Kies jouw avatar</div>
-    <div class="avatar-grid" id="av-grid"></div>
-    <button class="btn-primary" onclick="closeOverlay('avatar')">Bevestigen ✓</button>
+    <div class="sheet-title">Kies je avatar</div>
+    <div class="av-grid" id="av-grid"></div>
+    <button class="btn-primary" onclick="closeOverlay('av')">Bevestigen ✓</button>
   </div>
 </div>
 
-<!-- COMPLETE MODAL -->
+<!-- ═══ COMPLETE MODAL ═══ -->
 <div class="overlay" id="overlay-complete" onclick="if(event.target===this)closeOverlay('complete')">
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" id="cm-title"></div>
-    <div class="complete-big-pts">
-      <span class="complete-emoji" id="cm-emoji">🎊</span>
-      <span class="complete-pts-num" id="cm-pts"></span>
-      <span class="complete-pts-label">punten verdiend</span>
-      <span class="complete-bonus" id="cm-bonus" style="display:none"></span>
-      <span class="complete-total" id="cm-total" style="display:none"></span>
+    <div class="cm-hero">
+      <span class="cm-emoji" id="cm-emoji">🎊</span>
+      <span class="cm-pts-big" id="cm-pts"></span>
+      <span class="cm-pts-lbl">punten verdiend</span>
+      <span class="cm-bonus" id="cm-bonus" style="display:none"></span>
+      <span class="cm-total" id="cm-total" style="display:none"></span>
     </div>
     <div class="btn-row">
-      <button class="btn-primary" style="background:linear-gradient(135deg,var(--green),var(--blue))" onclick="confirmComplete()">✅ Volbracht!</button>
-      <button class="btn-secondary" onclick="closeOverlay('complete')">Annuleren</button>
+      <button class="btn-primary" style="background:linear-gradient(135deg,var(--green),var(--blue));box-shadow:0 4px 20px rgba(62,201,107,.3)" onclick="confirmComplete()">✅ Volbracht!</button>
+      <button class="btn-secondary" onclick="closeOverlay('complete')">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NOTIFICATIONS MODAL ═══ -->
+<div class="overlay" id="overlay-notifs" onclick="if(event.target===this)closeOverlay('notifs')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Meldingen 🔔</div>
+    <div id="notifs-list"></div>
+    <button class="btn-primary" style="margin-top:16px" onclick="closeOverlay('notifs');clearNotifs()">Alles gelezen ✓</button>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="overlay" id="overlay-settings" onclick="if(event.target===this)closeOverlay('settings')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Instellingen ⚙️</div>
+    <div class="settings-row">
+      <div><div class="sr-label">Meldingen</div><div class="sr-sub">Taken & voltooiingen</div></div>
+      <button class="sr-btn" onclick="requestNotifPerm()">Inschakelen</button>
+    </div>
+    <div class="settings-row">
+      <div><div class="sr-label">Maandpunten resetten</div><div class="sr-sub">Kies wie je wil resetten</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="sr-btn danger" onclick="resetPoints('pieterjan')">PJ</button>
+        <button class="sr-btn danger" onclick="resetPoints('celine')">Cé</button>
+      </div>
+    </div>
+    <div class="settings-row">
+      <div><div class="sr-label">Van gebruiker wisselen</div><div class="sr-sub" id="cur-user-lbl"></div></div>
+      <button class="sr-btn danger" onclick="switchUser()">Wissel</button>
+    </div>
+    <div style="margin-top:20px">
+      <button class="btn-primary" onclick="closeOverlay('settings')">Sluiten</button>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-//  FIREBASE INIT
-// ══════════════════════════════════════════════
-const firebaseConfig = {
+// ════════════════════════════════════════════
+//  FIREBASE
+// ════════════════════════════════════════════
+firebase.initializeApp({
   apiKey: "AIzaSyBi3QI8aBhN1zHpwuWkms0OKtOfTERiwrU",
   authDomain: "netti-876fe.firebaseapp.com",
   databaseURL: "https://netti-876fe-default-rtdb.europe-west1.firebasedatabase.app",
@@ -553,92 +748,91 @@ const firebaseConfig = {
   storageBucket: "netti-876fe.firebasestorage.app",
   messagingSenderId: "468981363032",
   appId: "1:468981363032:web:1bfc5c993b1edb9993752d"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+});
+const db  = firebase.database();
 const REF = db.ref('thuisquest');
 
-// ══════════════════════════════════════════════
-//  CONSTANTS & STATE
-// ══════════════════════════════════════════════
-const AVATARS = [
-  '🧔','👩‍🦱','👨','👩','🧑','🧑‍🦰','👨‍🦱','🧙','🧝','🦸','🦹',
-  '🧟','🧛','🧜','🧚','👮','🕵️','👷','🤠','🥷','🧑‍🍳','🧑‍🔬',
-  '🧑‍🎨','🐱','🐶','🦊','🐼','🦁','🐯','🦄','🐸','🦋','🌻','⭐','🌈','🔥','💎','👾','🎮','🏆'
-];
-const FREQ_LABELS = {1:'Dagelijks',2:'Om de 2 dagen',7:'Wekelijks',14:'2-wekelijks',30:'Maandelijks'};
+// ════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════
+const AVATARS = ['🧔','👩‍🦱','👨','👩','🧑','🧑‍🦰','👨‍🦱','🧙','🧝','🦸','🦹','🧟','🧛','🧜','🧚','👮','🕵️','👷','🤠','🥷','🧑‍🍳','🧑‍🔬','🧑‍🎨','🐱','🐶','🦊','🐼','🦁','🐯','🦄','🐸','🦋','🌻','⭐','🌈','🔥','💎','👾','🎮','🏆'];
+const DEVICE_KEY = 'tq_device_who';
+const NOTIF_KEY  = 'tq_notifs';
 
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
 let S = {
   users: {
     pieterjan: { name:'Pieterjan', avatar:'🧔', monthlyPoints:0, totalPoints:0 },
     celine:    { name:'Céline',    avatar:'👩‍🦱', monthlyPoints:0, totalPoints:0 }
   },
   tasks: [], challenges: [], history: [], currentMonth: '',
-  // runtime only
   me: null, editId: null, diff: 3, dur: 2,
-  filter: 'all', pendingTaskId: null, avatarFor: null,
-  deleteConfirm: false
+  filter: 'all', pendingTaskId: null, avFor: null, delArmed: false
 };
 
-// ══════════════════════════════════════════════
+// Previous task state for detecting other-user completions
+const prevTasks = new Map();
+
+// In-app notifications (stored in localStorage)
+let inAppNotifs = JSON.parse(localStorage.getItem(NOTIF_KEY) || '[]');
+
+// ════════════════════════════════════════════
 //  FIREBASE SAVE
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function save() {
-  setSyncDot('loading');
   REF.set({
     users: S.users,
     tasks:      Object.fromEntries(S.tasks.map(t => [t.id, t])),
     challenges: Object.fromEntries(S.challenges.map(c => [c.id, c])),
     history:    Object.fromEntries(S.history.map(h => [h.month.replace('-','_'), h])),
     currentMonth: S.currentMonth
-  }).then(() => setSyncDot('ok'))
-    .catch(() => setSyncDot('error'));
+  });
 }
 
-// ══════════════════════════════════════════════
-//  FIREBASE LISTENER (real-time sync)
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
+//  FIREBASE LISTENER
+// ════════════════════════════════════════════
 function startListener() {
   REF.on('value', snap => {
     const d = snap.val();
+    if (!d) { migrateFromLocal(); hideLoading(); return; }
 
-    if (!d) {
-      // Database empty → migrate from localStorage if available
-      migrateFromLocal();
-      setSyncDot('ok');
-      hideLoading();
-      return;
+    // Detect completions by other user BEFORE updating state
+    if (S.me && d.tasks) {
+      Object.values(d.tasks).forEach(t => {
+        const prev = prevTasks.get(t.id);
+        if (prev && t.lastDone !== prev.lastDone && t.lastDoneBy && t.lastDoneBy !== S.me) {
+          const name = S.users[t.lastDoneBy]?.name || t.lastDoneBy;
+          addNotif({ icon:'🎉', text:`${name} heeft "${t.name}" volbracht!`, time: Date.now() });
+          showBrowserNotif(`${name} heeft "${t.name}" volbracht! 🎉`);
+        }
+        prevTasks.set(t.id, { lastDone: t.lastDone, lastDoneBy: t.lastDoneBy });
+      });
     }
 
-    // Update state from Firebase
     if (d.users) {
       if (d.users.pieterjan) S.users.pieterjan = { ...S.users.pieterjan, ...d.users.pieterjan };
       if (d.users.celine)    S.users.celine    = { ...S.users.celine,    ...d.users.celine };
     }
     S.tasks      = d.tasks      ? Object.values(d.tasks)      : [];
     S.challenges = d.challenges ? Object.values(d.challenges) : [];
-    S.history    = d.history    ? Object.values(d.history).sort((a,b) => b.month.localeCompare(a.month)) : [];
+    S.history    = d.history    ? Object.values(d.history).sort((a,b)=>b.month.localeCompare(a.month)) : [];
     S.currentMonth = d.currentMonth || '';
 
+    // Init prevTasks on first load
+    if (prevTasks.size === 0) {
+      S.tasks.forEach(t => prevTasks.set(t.id, { lastDone: t.lastDone, lastDoneBy: t.lastDoneBy }));
+    }
+
     checkMonthReset();
-    setSyncDot('ok');
+    checkOverdueNotifs();
     hideLoading();
     refreshUI();
-  }, err => {
-    console.error(err);
-    setSyncDot('error');
-    hideLoading();
-    // Toon duidelijke fout bovenaan de app
-    const banner = document.createElement('div');
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#F24726;color:#fff;padding:12px 16px;font-size:13px;font-weight:700;z-index:999;text-align:center';
-    banner.textContent = '⚠️ Geen verbinding met Firebase — controleer de Rules in de console';
-    document.body.prepend(banner);
-  });
+  }, () => hideLoading());
 }
 
-// ══════════════════════════════════════════════
-//  MIGRATION from localStorage
-// ══════════════════════════════════════════════
 function migrateFromLocal() {
   try {
     const raw = localStorage.getItem('tq_v2');
@@ -649,14 +843,14 @@ function migrateFromLocal() {
     S.challenges = d.challenges || [];
     S.history    = d.history    || [];
     S.currentMonth = d.currentMonth || '';
-    save(); // upload to Firebase
+    save();
     toast('Lokale data overgezet naar de cloud ☁️', 'success');
   } catch(e) {}
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  MONTHLY RESET
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function checkMonthReset() {
   const now = new Date();
   const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -666,7 +860,7 @@ function checkMonthReset() {
     const winner = pj >= ce ? 'pieterjan' : 'celine';
     const [y,m] = S.currentMonth.split('-');
     const label = new Date(+y,+m-1).toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
-    S.history.unshift({ month: S.currentMonth, label, winner, scores:{pieterjan:pj,celine:ce} });
+    S.history.unshift({ month:S.currentMonth, label, winner, scores:{pieterjan:pj,celine:ce} });
     S.users.pieterjan.monthlyPoints = 0;
     S.users.celine.monthlyPoints    = 0;
     S.challenges.forEach(c => { if(c.status==='pending') c.status='expired'; });
@@ -677,107 +871,212 @@ function checkMonthReset() {
   }
 }
 
-// ══════════════════════════════════════════════
-//  UI REFRESH
-// ══════════════════════════════════════════════
-function refreshUI() {
-  document.getElementById('login-av-pieterjan').textContent = S.users.pieterjan.avatar;
-  document.getElementById('login-av-celine').textContent    = S.users.celine.avatar;
-  if (!S.me) return;
-  updateHeader();
-  const v = document.querySelector('.view.active')?.id;
-  if (v === 'view-tasks')       renderTasks();
-  else if (v === 'view-challenges')  renderChallenges();
-  else if (v === 'view-leaderboard') renderLeaderboard();
-}
-
-// ══════════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════════
-const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36);
-
-function calcPts(diff, dur) { return diff * dur * 4; }
-
-function urgency(task) {
-  if (!task.lastDone) return 'overdue';
-  const days = (Date.now() - new Date(task.lastDone)) / 86400000;
-  const r = days / task.freq;
-  if (r < 0.5) return 'good';
-  if (r < 0.75) return 'warning';
-  if (r < 1)   return 'soon';
-  return 'overdue';
-}
-
-function urgencyLabel(u, task) {
-  if (u === 'good') {
-    const left = Math.ceil(task.freq - (Date.now()-new Date(task.lastDone))/86400000);
-    return `🟢 Over ${left} dag${left!==1?'en':''}`;
+// ════════════════════════════════════════════
+//  URGENCY — calendar-day based, continuous
+// ════════════════════════════════════════════
+function elapsedRatio(task) {
+  if (task.freq === null || task.freq === undefined) {
+    return task.lastDone ? -1 : 0; // -1 = done (one-time), 0 = not done
   }
-  if (u === 'warning') return '🟡 Binnenkort';
-  if (u === 'soon')    return '🟠 Bijna!';
+  if (!task.lastDone) return 2; // never done = very overdue
+
+  if (task.freq < 1) {
+    // 2×/day: use actual hours
+    const hrs = (Date.now() - new Date(task.lastDone)) / 3600000;
+    return hrs / (task.freq * 24);
+  } else {
+    // Daily+: midnight-based calendar days
+    const lastDay = new Date(task.lastDone); lastDay.setHours(0,0,0,0);
+    const today   = new Date();              today.setHours(0,0,0,0);
+    const days    = (today - lastDay) / 86400000;
+    return days / task.freq;
+  }
+}
+
+function urgencyColor(ratio) {
+  // ratio: 0=just done → 1=due → 2+=very overdue
+  if (ratio < 0) return '#3a3a5a'; // one-time done
+  const stops = [
+    { r:0,    h:142, s:65, l:45 },  // green
+    { r:0.4,  h:95,  s:70, l:48 },  // yellow-green
+    { r:0.65, h:60,  s:85, l:50 },  // yellow
+    { r:0.85, h:35,  s:90, l:50 },  // orange
+    { r:1.0,  h:12,  s:88, l:48 },  // red
+    { r:1.5,  h:0,   s:80, l:30 },  // dark red
+  ];
+  const capped = Math.min(ratio, 1.5);
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i], b = stops[i+1];
+    if (capped >= a.r && capped <= b.r) {
+      const t = (capped - a.r) / (b.r - a.r);
+      const h = a.h + (b.h - a.h) * t;
+      const s = a.s + (b.s - a.s) * t;
+      const l = a.l + (b.l - a.l) * t;
+      return `hsl(${h.toFixed(0)},${s.toFixed(0)}%,${l.toFixed(0)}%)`;
+    }
+  }
+  return 'hsl(0,80%,25%)';
+}
+
+function urgencyLabel(ratio, task) {
+  if (task.freq === null || task.freq === undefined) {
+    return task.lastDone ? '✅ Gedaan' : '⭐ Eénmalig';
+  }
+  if (!task.lastDone) return '🔴 Nog nooit gedaan';
+  if (ratio < 0.4)  return `🟢 Over ${daysLeft(task)} dag${daysLeft(task)!==1?'en':''}`;
+  if (ratio < 0.65) return '🟡 Binnenkort';
+  if (ratio < 0.85) return '🟠 Bijna!';
+  if (ratio < 1)    return '🔴 Bijna te laat';
   return '🔴 Te laat!';
 }
 
-function stars(n) { return '★'.repeat(n) + '☆'.repeat(5-n); }
-function other() { return S.me === 'pieterjan' ? 'celine' : 'pieterjan'; }
+function daysLeft(task) {
+  if (!task.lastDone || !task.freq) return 0;
+  const lastDay = new Date(task.lastDone); lastDay.setHours(0,0,0,0);
+  const dueDay  = new Date(lastDay); dueDay.setDate(dueDay.getDate() + Math.ceil(task.freq));
+  const today   = new Date(); today.setHours(0,0,0,0);
+  return Math.max(0, Math.ceil((dueDay - today) / 86400000));
+}
+
+function urgencyCategory(ratio, task) {
+  if (task.freq === null || task.freq === undefined) return 'onetime';
+  if (ratio >= 1) return 'overdue';
+  if (ratio >= 0.65) return 'due';
+  return 'good';
+}
+
+// ════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════
+const uid  = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36);
+const calc = (d,u) => d * u * 4;
+const other = () => S.me === 'pieterjan' ? 'celine' : 'pieterjan';
+const stars = n => '★'.repeat(n) + '☆'.repeat(5-n);
+
+function freqLabel(freq) {
+  if (freq === null || freq === undefined) return 'Eénmalig';
+  if (+freq === 0.5) return '2× per dag';
+  if (+freq === 1)   return 'Dagelijks';
+  if (+freq === 2)   return 'Om de 2 dagen';
+  if (+freq === 7)   return 'Wekelijks';
+  if (+freq === 14)  return '2-wekelijks';
+  if (+freq === 30)  return 'Maandelijks';
+  return `Elke ${freq} dagen`;
+}
 
 function monthName() {
-  const now = new Date();
-  const s = now.toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  const s = new Date().toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function setSyncDot(state) {
-  const el = document.getElementById('sync-dot');
-  if (el) { el.className = 'sync-dot ' + state; }
-}
-
 function hideLoading() {
-  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
   document.getElementById('root').style.display = '';
 }
 
-// ══════════════════════════════════════════════
-//  TOAST (vervangt alert/confirm op Android)
-// ══════════════════════════════════════════════
-function toast(msg, type='info') {
-  const el = document.createElement('div');
-  el.className = `toast t-${type}`;
-  el.textContent = msg;
-  document.body.appendChild(el);
-  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
-  setTimeout(() => {
-    el.classList.remove('show');
-    setTimeout(() => el.remove(), 350);
-  }, 2800);
+// ════════════════════════════════════════════
+//  NOTIFICATIONS
+// ════════════════════════════════════════════
+function addNotif(n) {
+  inAppNotifs.unshift(n);
+  if (inAppNotifs.length > 30) inAppNotifs = inAppNotifs.slice(0,30);
+  localStorage.setItem(NOTIF_KEY, JSON.stringify(inAppNotifs));
+  updateNotifBadge();
 }
 
-// ══════════════════════════════════════════════
-//  LOGIN / LOGOUT
-// ══════════════════════════════════════════════
+function clearNotifs() {
+  inAppNotifs = [];
+  localStorage.setItem(NOTIF_KEY, JSON.stringify(inAppNotifs));
+  updateNotifBadge();
+}
+
+function updateNotifBadge() {
+  const btn = document.getElementById('notif-btn');
+  if (!btn) return;
+  const count = inAppNotifs.length;
+  btn.innerHTML = `🔔${count>0?`<span class="badge">${count>9?'9+':count}</span>`:''}`;
+}
+
+function checkOverdueNotifs() {
+  if (!S.me) return;
+  S.tasks.forEach(task => {
+    const r = elapsedRatio(task);
+    if (r >= 1 && task.freq !== null && task.freq !== undefined) {
+      const key = `od_${task.id}_${task.lastDone||'never'}`;
+      if (!localStorage.getItem(key)) {
+        addNotif({ icon:'🔴', text:`"${task.name}" is te laat!`, time: Date.now() });
+        showBrowserNotif(`"${task.name}" is te laat! 🔴`);
+        localStorage.setItem(key, '1');
+      }
+    }
+  });
+}
+
+async function requestNotifPerm() {
+  if (!('Notification' in window)) { toast('Meldingen niet ondersteund op dit toestel', 'error'); return; }
+  const p = await Notification.requestPermission();
+  toast(p === 'granted' ? 'Meldingen ingeschakeld ✓' : 'Meldingen geweigerd', p==='granted'?'success':'error');
+}
+
+function showBrowserNotif(text) {
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    try { new Notification('Thuis Quest', { body: text, icon: './icon.svg' }); } catch(e) {}
+  }
+}
+
+// ════════════════════════════════════════════
+//  AUTO-LOGIN (device remembers user)
+// ════════════════════════════════════════════
 function login(userId) {
   S.me = userId;
+  localStorage.setItem(DEVICE_KEY, userId);
   document.getElementById('login').classList.remove('active');
   document.getElementById('app').classList.add('active');
   updateHeader();
   setView('tasks', document.getElementById('nav-tasks'));
+  checkOverdueNotifs();
+  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    setTimeout(() => requestNotifPerm(), 2000);
+  }
 }
 
-function logout() {
+function switchUser() {
+  closeOverlay('settings');
   S.me = null;
+  localStorage.removeItem(DEVICE_KEY);
   document.getElementById('app').classList.remove('active');
   document.getElementById('login').classList.add('active');
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
+//  UI REFRESH
+// ════════════════════════════════════════════
+function refreshUI() {
+  const pj = S.users.pieterjan, ce = S.users.celine;
+  // Login screen
+  document.getElementById('lav-pj').textContent  = pj.avatar;
+  document.getElementById('lav-ce').textContent  = ce.avatar;
+  document.getElementById('lpts-pj').textContent = pj.monthlyPoints;
+  document.getElementById('lpts-ce').textContent = ce.monthlyPoints;
+
+  if (!S.me) return;
+  updateHeader();
+  const v = document.querySelector('.view.active')?.id;
+  if (v==='view-tasks')       renderTasks();
+  else if (v==='view-challenges')  renderChallenges();
+  else if (v==='view-leaderboard') renderLeaderboard();
+}
+
+// ════════════════════════════════════════════
 //  HEADER
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function updateHeader() {
   if (!S.me) return;
   const u = S.users[S.me];
-  document.getElementById('h-avatar').textContent = u.avatar;
-  document.getElementById('h-name').textContent   = u.name;
-  document.getElementById('h-pts').textContent    = u.monthlyPoints;
+  document.getElementById('h-av').textContent   = u.avatar;
+  document.getElementById('h-name').textContent = u.name;
+  document.getElementById('h-pts').textContent  = u.monthlyPoints;
+
   const pj = S.users.pieterjan, ce = S.users.celine;
   document.getElementById('sc-av-pj').textContent  = pj.avatar;
   document.getElementById('sc-av-ce').textContent  = ce.avatar;
@@ -785,18 +1084,22 @@ function updateHeader() {
   const ceEl = document.getElementById('sc-pts-ce');
   pjEl.textContent = pj.monthlyPoints;
   ceEl.textContent = ce.monthlyPoints;
-  const pjLeads = pj.monthlyPoints >= ce.monthlyPoints;
-  pjEl.className = 'sc-pts' + (pjLeads && (pj.monthlyPoints>0||ce.monthlyPoints>0) ? ' leading':'');
-  ceEl.className = 'sc-pts' + (!pjLeads && ce.monthlyPoints>0 ? ' leading':'');
-  // challenge badge
+  const pjL = pj.monthlyPoints >= ce.monthlyPoints;
+  pjEl.className = 'sc-pts' + (pjL && (pj.monthlyPoints>0||ce.monthlyPoints>0) ? ' lead':'');
+  ceEl.className = 'sc-pts' + (!pjL && ce.monthlyPoints>0 ? ' lead':'');
+
+  // Challenges badge
   const pending = S.challenges.filter(c => c.to===S.me && c.status==='pending').length;
   document.getElementById('nav-challenges').innerHTML =
     `<span class="nav-icon">⚡</span>Challenges${pending>0?`<span class="nav-badge">${pending}</span>`:''}`;
+
+  document.getElementById('cur-user-lbl').textContent = `Momenteel ingelogd als ${u.name}`;
+  updateNotifBadge();
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  NAVIGATION
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function setView(name, btn) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -808,24 +1111,25 @@ function setView(name, btn) {
 }
 
 function openAddView(taskId) {
-  S.editId = taskId || null;
-  S.deleteConfirm = false;
+  S.editId   = taskId || null;
+  S.delArmed = false;
   const delBtn = document.getElementById('del-btn');
   if (taskId) {
     const t = S.tasks.find(x => x.id===taskId);
     document.getElementById('add-title').textContent = 'Taak Bewerken ✏️';
     document.getElementById('t-name').value = t.name;
-    document.getElementById('t-freq').value = t.freq;
-    setStar('diff', t.diff);
-    setStar('dur',  t.dur);
+    // Set frequency select
+    const fv = t.freq===null||t.freq===undefined ? 'null' : String(t.freq);
+    document.getElementById('t-freq').value = fv;
+    setStar('diff', t.diff); setStar('dur', t.dur);
     document.getElementById('save-btn').textContent = 'Wijzigingen Opslaan';
     delBtn.style.display = 'block';
-    delBtn.textContent = '🗑 Taak Verwijderen';
-    delBtn.classList.remove('confirm-state');
+    delBtn.textContent = '🗑 Verwijderen';
+    delBtn.classList.remove('armed');
   } else {
     document.getElementById('add-title').textContent = 'Nieuwe Taak ✨';
     document.getElementById('t-name').value = '';
-    document.getElementById('t-freq').value = 7;
+    document.getElementById('t-freq').value = '7';
     setStar('diff', 3); setStar('dur', 2);
     document.getElementById('save-btn').textContent = 'Taak Opslaan';
     delBtn.style.display = 'none';
@@ -837,44 +1141,71 @@ function openAddView(taskId) {
   document.getElementById('nav-add').classList.add('active');
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  TASKS
-// ══════════════════════════════════════════════
-const UORDER = { overdue:0, soon:1, warning:2, good:3 };
-
+// ════════════════════════════════════════════
 function renderTasks() {
   const list = document.getElementById('tasks-list');
+  const SORT = { overdue:0, due:1, onetime:2, good:3, done:4 };
+
   let tasks = [...S.tasks].sort((a,b) => {
-    const d = UORDER[urgency(a)] - UORDER[urgency(b)];
-    return d!==0 ? d : a.name.localeCompare(b.name);
+    const ra = elapsedRatio(a), rb = elapsedRatio(b);
+    const ca = urgencyCategory(ra,a), cb = urgencyCategory(rb,b);
+    const d = (SORT[ca]??5) - (SORT[cb]??5);
+    return d !== 0 ? d : a.name.localeCompare(b.name);
   });
-  if (S.filter!=='all') {
-    const map = { overdue:['overdue'], soon:['soon','warning'], good:['good'] };
-    tasks = tasks.filter(t => (map[S.filter]||[]).includes(urgency(t)));
+
+  if (S.filter !== 'all') {
+    tasks = tasks.filter(t => {
+      const r = elapsedRatio(t);
+      const cat = urgencyCategory(r,t);
+      if (S.filter==='overdue')  return cat==='overdue';
+      if (S.filter==='due')      return cat==='due';
+      if (S.filter==='good')     return cat==='good';
+      if (S.filter==='onetime')  return cat==='onetime';
+      return true;
+    });
   }
+
   if (!tasks.length) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${S.tasks.length?'✅':'🏠'}</div><h3>${S.tasks.length?'Geen taken hier':'Nog geen taken!'}</h3><p>${S.tasks.length?'Pas het filter aan.':'Tik op ➕ om te beginnen.'}</p></div>`;
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">${S.tasks.length?'✅':'🏠'}</div><h3>${S.tasks.length?'Geen taken hier':'Nog geen taken!'}</h3><p>${S.tasks.length?'Pas het filter aan.':'Tik op ➕ om je eerste taak toe te voegen.'}</p></div>`;
     return;
   }
+
   const incoming = S.challenges.filter(c => c.to===S.me && c.status==='pending');
   const chalMap  = Object.fromEntries(incoming.map(c => [c.taskId, c]));
+
   list.innerHTML = tasks.map(task => {
-    const u = urgency(task);
-    const pts = calcPts(task.diff, task.dur);
-    const chal = chalMap[task.id];
-    return `<div class="task-card u-${u}${chal?' challenged':''}">
-      <div class="tc-top">
-        <div class="tc-name">${task.name}</div>
-        <div class="tc-pts">${pts}${chal?` <span style="color:var(--purple)">+${chal.bonus}⚡</span>`:''} pts</div>
+    const ratio   = elapsedRatio(task);
+    const color   = urgencyColor(ratio);
+    const label   = urgencyLabel(ratio, task);
+    const pts     = calc(task.diff, task.dur);
+    const chal    = chalMap[task.id];
+    const isDone  = ratio < 0; // one-time completed
+    const barPct  = ratio < 0 ? 100 : Math.min(ratio * 100, 100);
+
+    const btnColor = isDone
+      ? 'background:rgba(255,255,255,.08);color:var(--text2);cursor:default'
+      : `background:${color};color:${ratio>0.5?'#fff':'#000'}`;
+
+    return `<div class="task-card${isDone?' done-card':''}">
+      <div class="task-inner">
+        <div class="tc-top">
+          <div class="tc-name">${task.name}</div>
+          <div class="tc-pts">${pts}${chal?` <span class="tc-challenge-pts">+${chal.bonus}⚡</span>`:''} pts</div>
+        </div>
+        <div class="tc-meta">
+          <div class="tc-tag">⚡ <span class="stars">${stars(task.diff)}</span></div>
+          <div class="tc-tag">⏱️ <span class="stars">${stars(task.dur)}</span></div>
+          <div class="tc-tag">🔄 ${freqLabel(task.freq)}</div>
+        </div>
+        <div class="urgency-label" style="color:${color}">${label}</div>
       </div>
-      <div class="tc-meta">
-        <div class="tc-meta-item">⚡ <span class="stars-filled">${stars(task.diff)}</span></div>
-        <div class="tc-meta-item">⏱️ <span class="stars-filled">${stars(task.dur)}</span></div>
-        <div class="tc-meta-item">🔄 ${FREQ_LABELS[task.freq]||`Elke ${task.freq} dagen`}</div>
+      <div class="urgency-bar-track">
+        <div class="urgency-bar-fill" style="width:${barPct}%;background:${color}"></div>
       </div>
-      <div class="urgency-tag u-${u}">${urgencyLabel(u,task)}</div>
       <div class="tc-actions">
-        <button class="btn-complete" onclick="promptComplete('${task.id}')">✅ Volbracht!</button>
+        <button class="btn-complete" style="${btnColor}" onclick="${isDone?'':` promptComplete('${task.id}')`}">${isDone?'✅ Gedaan':'✅ Volbracht!'}</button>
         <button class="btn-edit" onclick="openAddView('${task.id}')">✏️</button>
       </div>
     </div>`;
@@ -883,25 +1214,26 @@ function renderTasks() {
 
 function setFilter(f, btn) {
   S.filter = f;
-  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.fpill').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   renderTasks();
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  COMPLETE TASK
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function promptComplete(taskId) {
-  const task = S.tasks.find(t => t.id===taskId);
-  const pts  = calcPts(task.diff, task.dur);
+  const task  = S.tasks.find(t => t.id===taskId);
+  const pts   = calc(task.diff, task.dur);
   const chals = S.challenges.filter(c => c.to===S.me && c.status==='pending' && c.taskId===taskId);
-  const bonus = chals.reduce((s,c) => s+c.bonus, 0);
+  const bonus = chals.reduce((s,c)=>s+c.bonus,0);
+
   S.pendingTaskId = taskId;
-  document.getElementById('cm-title').textContent = task.name;
-  document.getElementById('cm-emoji').textContent = bonus ? '⚡🎊' : '🎊';
-  document.getElementById('cm-pts').textContent   = pts;
+  document.getElementById('cm-title').textContent  = task.name;
+  document.getElementById('cm-emoji').textContent  = bonus ? '⚡🎊' : '🎊';
+  document.getElementById('cm-pts').textContent    = pts;
   if (bonus > 0) {
-    document.getElementById('cm-bonus').textContent = `+ ${bonus} bonus pts ⚡`;
+    document.getElementById('cm-bonus').textContent = `+ ${bonus} bonus ⚡`;
     document.getElementById('cm-bonus').style.display = 'block';
     document.getElementById('cm-total').textContent = `= ${pts+bonus} totaal!`;
     document.getElementById('cm-total').style.display = 'block';
@@ -916,14 +1248,17 @@ function confirmComplete() {
   const taskId = S.pendingTaskId;
   if (!taskId) return;
   const task  = S.tasks.find(t => t.id===taskId);
-  const pts   = calcPts(task.diff, task.dur);
+  const pts   = calc(task.diff, task.dur);
   const chals = S.challenges.filter(c => c.to===S.me && c.status==='pending' && c.taskId===taskId);
-  const bonus = chals.reduce((s,c) => s+c.bonus, 0);
+  const bonus = chals.reduce((s,c)=>s+c.bonus,0);
   const total = pts + bonus;
+
   S.users[S.me].monthlyPoints += total;
   S.users[S.me].totalPoints   += total;
-  task.lastDone = new Date().toISOString();
+  task.lastDone   = new Date().toISOString();
+  task.lastDoneBy = S.me;
   chals.forEach(c => c.status='completed');
+
   save();
   closeOverlay('complete');
   updateHeader();
@@ -936,14 +1271,14 @@ function showPtsPopup(pts) {
   el.className = 'pts-popup';
   el.textContent = `+${pts} ⭐`;
   el.style.left  = (20+Math.random()*60)+'%';
-  el.style.top   = '38%';
+  el.style.top   = '40%';
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1700);
+  setTimeout(() => el.remove(), 1900);
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  ADD / EDIT TASK
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function setStar(type, val) {
   S[type] = val;
   document.querySelectorAll(`#pick-${type} .star-btn`).forEach(b => {
@@ -952,42 +1287,34 @@ function setStar(type, val) {
   updatePtsPreview();
 }
 
-function setFreq(days) {
-  document.getElementById('t-freq').value = days;
-  updatePtsPreview();
-}
-
 function updatePtsPreview() {
-  document.getElementById('pts-prev').textContent = calcPts(S.diff||3, S.dur||2);
+  document.getElementById('pts-prev').textContent = calc(S.diff||3, S.dur||2);
 }
 
 function saveTask() {
   const name = document.getElementById('t-name').value.trim();
   if (!name) { toast('Geef de taak een naam! 📝', 'error'); return; }
-  const freq = Math.max(1, parseInt(document.getElementById('t-freq').value)||7);
+  const fv   = document.getElementById('t-freq').value;
+  const freq = fv === 'null' ? null : parseFloat(fv);
+
   if (S.editId) {
     const t = S.tasks.find(x => x.id===S.editId);
     t.name=name; t.diff=S.diff; t.dur=S.dur; t.freq=freq;
   } else {
-    S.tasks.push({ id:uid(), name, diff:S.diff, dur:S.dur, freq, lastDone:null });
+    S.tasks.push({ id:uid(), name, diff:S.diff, dur:S.dur, freq, lastDone:null, lastDoneBy:null });
   }
   save();
   toast(S.editId ? 'Taak bijgewerkt ✓' : 'Taak toegevoegd ✓', 'success');
   setView('tasks', document.getElementById('nav-tasks'));
 }
 
-// Two-tap delete (geen confirm() nodig — werkt op Android)
 function deleteTap() {
   const btn = document.getElementById('del-btn');
-  if (!S.deleteConfirm) {
-    S.deleteConfirm = true;
+  if (!S.delArmed) {
+    S.delArmed = true;
     btn.textContent = '⚠️ Zeker verwijderen?';
-    btn.classList.add('confirm-state');
-    setTimeout(() => {
-      S.deleteConfirm = false;
-      btn.textContent = '🗑 Taak Verwijderen';
-      btn.classList.remove('confirm-state');
-    }, 3000);
+    btn.classList.add('armed');
+    setTimeout(() => { S.delArmed=false; btn.textContent='🗑 Verwijderen'; btn.classList.remove('armed'); }, 3000);
   } else {
     S.tasks      = S.tasks.filter(t => t.id!==S.editId);
     S.challenges = S.challenges.filter(c => c.taskId!==S.editId);
@@ -997,152 +1324,175 @@ function deleteTap() {
   }
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  CHALLENGES
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function renderChallenges() {
-  const them = other();
-  const theirUser = S.users[them];
+  const them = other(), theirUser = S.users[them];
   document.getElementById('chal-task').innerHTML =
     '<option value="">Kies een taak…</option>' +
-    S.tasks.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    S.tasks.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');
 
-  const incoming = S.challenges.filter(c => c.to===S.me && c.status==='pending');
-  const inEl = document.getElementById('chal-incoming');
-  inEl.innerHTML = incoming.length ? incoming.map(c => {
-    const task = S.tasks.find(t => t.id===c.taskId);
-    const dLeft = Math.ceil((new Date(c.deadline)-Date.now())/86400000);
-    return `<div class="chal-card incoming">
-      <div class="chal-card-top">
-        <span class="chal-from">${theirUser.avatar} ${theirUser.name} daagt je uit!</span>
-        <span class="chal-bonus">+${c.bonus} pts ⚡</span>
-      </div>
-      <div class="chal-task">${task?task.name:'?'}</div>
-      <div class="chal-status">⏳ Nog ${dLeft} dag${dLeft!==1?'en':''}</div>
-    </div>`;
-  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Geen actieve uitdagingen voor jou.</p>`;
+  const inc = S.challenges.filter(c => c.to===S.me && c.status==='pending');
+  const inEl = document.getElementById('chal-in');
+  inEl.innerHTML = inc.length ? inc.map(c => {
+    const task = S.tasks.find(t=>t.id===c.taskId);
+    const dL = Math.ceil((new Date(c.deadline)-Date.now())/86400000);
+    return `<div class="chal-card incoming"><div class="chal-top"><span class="chal-from">${theirUser.avatar} ${theirUser.name} daagt je uit!</span><span class="chal-bonus">+${c.bonus} pts ⚡</span></div><div class="chal-task">${task?task.name:'?'}</div><div class="chal-status">⏳ Nog ${dL} dag${dL!==1?'en':''}</div></div>`;
+  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Geen actieve uitdagingen.</p>`;
 
-  const outgoing = S.challenges.filter(c => c.from===S.me);
-  const outEl = document.getElementById('chal-outgoing');
-  const stClr = {pending:'var(--yellow)',completed:'var(--green)',expired:'var(--red)'};
-  const stTxt = {pending:'⏳ In afwachting',completed:'✅ Volbracht!',expired:'❌ Verlopen'};
-  outEl.innerHTML = outgoing.length ? outgoing.map(c => {
-    const task = S.tasks.find(t => t.id===c.taskId);
-    return `<div class="chal-card">
-      <div class="chal-card-top">
-        <span class="chal-from">Naar ${theirUser.avatar} ${theirUser.name}</span>
-        <span class="chal-bonus" style="color:${stClr[c.status]}">+${c.bonus} pts</span>
-      </div>
-      <div class="chal-task">${task?task.name:'?'}</div>
-      <div class="chal-status" style="color:${stClr[c.status]}">${stTxt[c.status]}</div>
-    </div>`;
+  const out = S.challenges.filter(c => c.from===S.me);
+  const outEl = document.getElementById('chal-out');
+  const stC = {pending:'var(--yellow)',completed:'var(--green)',expired:'var(--red)'};
+  const stT = {pending:'⏳ In afwachting',completed:'✅ Volbracht!',expired:'❌ Verlopen'};
+  outEl.innerHTML = out.length ? out.map(c => {
+    const task = S.tasks.find(t=>t.id===c.taskId);
+    return `<div class="chal-card"><div class="chal-top"><span class="chal-from">Naar ${theirUser.avatar} ${theirUser.name}</span><span class="chal-bonus" style="color:${stC[c.status]}">+${c.bonus} pts</span></div><div class="chal-task">${task?task.name:'?'}</div><div class="chal-status" style="color:${stC[c.status]}">${stT[c.status]}</div></div>`;
   }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Nog geen challenges verstuurd.</p>`;
 }
 
 function sendChallenge() {
   const taskId = document.getElementById('chal-task').value;
-  if (!taskId) { toast('Kies eerst een taak! 📋', 'error'); return; }
+  if (!taskId) { toast('Kies eerst een taak!', 'error'); return; }
   const bonus = Math.max(10, parseInt(document.getElementById('chal-bonus').value)||50);
   const days  = Math.max(1,  parseInt(document.getElementById('chal-days').value)||3);
   const dl    = new Date(); dl.setDate(dl.getDate()+days);
   S.challenges.push({ id:uid(), from:S.me, to:other(), taskId, bonus, deadline:dl.toISOString(), status:'pending' });
-  save();
-  renderChallenges();
-  updateHeader();
-  const task = S.tasks.find(t => t.id===taskId);
-  toast(`⚡ Challenge verstuurd! "${task.name}"`, 'success');
+  save(); renderChallenges(); updateHeader();
+  const task = S.tasks.find(t=>t.id===taskId);
+  toast(`⚡ "${task?.name}" verstuurd!`, 'success');
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  LEADERBOARD
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 function renderLeaderboard() {
   document.getElementById('lb-month').textContent = monthName();
   const pj=S.users.pieterjan, ce=S.users.celine;
   const pjP=pj.monthlyPoints, ceP=ce.monthlyPoints;
-  const pjLeads = pjP >= ceP;
+  const pjW = pjP >= ceP;
   const max = Math.max(pjP,ceP,1);
+
   document.getElementById('lb-podium').innerHTML = `
-    <div class="podium-card ${pjLeads&&pjP>0?'crown-card':''}">
-      ${pjLeads&&pjP>0?'<div class="pod-crown">👑</div>':'<div style="height:34px"></div>'}
-      <div class="pod-avatar">${pj.avatar}</div>
-      <div class="pod-name">Pieterjan</div>
-      <div class="pod-pts">${pjP}</div>
-      <div class="pod-label">Punten</div>
+    <div class="pod-card${pjW&&pjP>0?' winning':''}">
+      ${pjW&&pjP>0?'<div class="pod-crown">👑</div>':'<div style="height:36px"></div>'}
+      <div class="pod-av">${pj.avatar}</div><div class="pod-name">Pieterjan</div>
+      <div class="pod-pts">${pjP}</div><div class="pod-lbl">Punten</div>
     </div>
-    <div class="podium-card ${!pjLeads&&ceP>0?'crown-card':''}">
-      ${!pjLeads&&ceP>0?'<div class="pod-crown">👑</div>':'<div style="height:34px"></div>'}
-      <div class="pod-avatar">${ce.avatar}</div>
-      <div class="pod-name">Céline</div>
-      <div class="pod-pts">${ceP}</div>
-      <div class="pod-label">Punten</div>
+    <div class="pod-card${!pjW&&ceP>0?' winning':''}">
+      ${!pjW&&ceP>0?'<div class="pod-crown">👑</div>':'<div style="height:36px"></div>'}
+      <div class="pod-av">${ce.avatar}</div><div class="pod-name">Céline</div>
+      <div class="pod-pts">${ceP}</div><div class="pod-lbl">Punten</div>
     </div>`;
+
   document.getElementById('lb-bars').innerHTML = `
-    <div class="progress-block">
-      <div class="pb-row"><span class="pb-who">${pj.avatar} Pieterjan</span><span class="pb-val">${pjP} pts</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${(pjP/max*100).toFixed(1)}%;background:var(--blue)"></div></div>
-    </div>
-    <div class="progress-block">
-      <div class="pb-row"><span class="pb-who">${ce.avatar} Céline</span><span class="pb-val">${ceP} pts</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${(ceP/max*100).toFixed(1)}%;background:var(--purple)"></div></div>
-    </div>`;
-  const histEl = document.getElementById('lb-history');
+    <div class="pb-block"><div class="pb-row"><span class="pb-who">${pj.avatar} Pieterjan</span><span class="pb-val">${pjP} pts</span></div>
+    <div class="pb-track"><div class="pb-fill" style="width:${(pjP/max*100).toFixed(1)}%;background:var(--blue)"></div></div></div>
+    <div class="pb-block"><div class="pb-row"><span class="pb-who">${ce.avatar} Céline</span><span class="pb-val">${ceP} pts</span></div>
+    <div class="pb-track"><div class="pb-fill" style="width:${(ceP/max*100).toFixed(1)}%;background:var(--purple)"></div></div></div>`;
+
+  const histEl = document.getElementById('lb-hist');
   histEl.innerHTML = S.history.length ? S.history.map(h => {
     const w = S.users[h.winner];
-    return `<div class="hist-item">
-      <div class="hist-info">
-        <div class="hist-month">${h.label||h.month}</div>
-        <div class="hist-scores">${pj.name}: ${h.scores.pieterjan} — ${ce.name}: ${h.scores.celine}</div>
-      </div>
-      <div class="hist-winner">${w.avatar} 👑</div>
-    </div>`;
-  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Nog geen historiek. Speel door tot einde van de maand!</p>`;
+    return `<div class="hist-item"><div class="hist-info"><div class="hist-month">${h.label||h.month}</div><div class="hist-scores">${pj.name}: ${h.scores.pieterjan} — ${ce.name}: ${h.scores.celine}</div></div><div class="hist-winner">${w.avatar} 👑</div></div>`;
+  }).join('') : `<p style="color:var(--text2);font-size:14px;padding:8px 0">Nog geen historiek.</p>`;
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════
+function resetPoints(userId) {
+  S.users[userId].monthlyPoints = 0;
+  save();
+  toast(`Maandpunten van ${S.users[userId].name} gereset`, 'info');
+  updateHeader();
+}
+
+// ════════════════════════════════════════════
+//  NOTIFICATIONS SHEET
+// ════════════════════════════════════════════
+function openNotifSheet() {
+  const el = document.getElementById('notifs-list');
+  if (!inAppNotifs.length) {
+    el.innerHTML = `<div class="notif-empty">🔕 Geen nieuwe meldingen</div>`;
+  } else {
+    el.innerHTML = inAppNotifs.map(n => {
+      const ago = timeAgo(n.time);
+      return `<div class="notif-item"><div class="notif-icon">${n.icon}</div><div class="notif-text">${n.text}</div><div class="notif-time">${ago}</div></div>`;
+    }).join('');
+  }
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s < 60)   return 'zojuist';
+  if (s < 3600) return `${Math.floor(s/60)} min geleden`;
+  if (s < 86400) return `${Math.floor(s/3600)} uur geleden`;
+  return `${Math.floor(s/86400)} dagen geleden`;
+}
+
+// ════════════════════════════════════════════
 //  AVATAR PICKER
-// ══════════════════════════════════════════════
-function openAvatarPicker(userId) {
-  S.avatarFor = userId;
+// ════════════════════════════════════════════
+function openAvPicker(userId) {
+  S.avFor = userId;
   const cur = S.users[userId].avatar;
   document.getElementById('av-grid').innerHTML = AVATARS.map(a =>
-    `<div class="av-opt${a===cur?' on':''}" onclick="pickAvatar('${a}',this)">${a}</div>`
+    `<div class="av-opt${a===cur?' on':''}" onclick="pickAv('${a}',this)">${a}</div>`
   ).join('');
-  openOverlay('avatar');
+  openOverlay('av');
 }
 
-function pickAvatar(av, el) {
-  document.querySelectorAll('.av-opt').forEach(o => o.classList.remove('on'));
+function pickAv(av, el) {
+  document.querySelectorAll('.av-opt').forEach(o=>o.classList.remove('on'));
   el.classList.add('on');
-  S.users[S.avatarFor].avatar = av;
+  S.users[S.avFor].avatar = av;
   save();
-  document.getElementById('login-av-'+S.avatarFor).textContent = av;
+  document.getElementById('lav-'+S.avFor.replace('pieterjan','pj').replace('celine','ce')).textContent = av;
   if (S.me) updateHeader();
 }
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  MODAL HELPERS
-// ══════════════════════════════════════════════
-function openOverlay(name)  { document.getElementById('overlay-'+name).classList.add('open'); }
+// ════════════════════════════════════════════
+function openOverlay(name) {
+  if (name==='notifs') openNotifSheet();
+  document.getElementById('overlay-'+name).classList.add('open');
+}
 function closeOverlay(name) {
   document.getElementById('overlay-'+name).classList.remove('open');
   if (name==='complete') S.pendingTaskId=null;
-  if (name==='avatar')   S.avatarFor=null;
+  if (name==='av')       S.avFor=null;
 }
 
-// ══════════════════════════════════════════════
-//  LIVE INPUTS
-// ══════════════════════════════════════════════
-document.getElementById('t-freq').addEventListener('input', updatePtsPreview);
+// ════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),350); }, 2800);
+}
 
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js');
 }
 
-startListener(); // Firebase real-time listener start
+document.getElementById('t-freq').addEventListener('change', updatePtsPreview);
+
+// Auto-login from device storage
+startListener();
+const savedUser = localStorage.getItem(DEVICE_KEY);
+if (savedUser && (savedUser==='pieterjan'||savedUser==='celine')) {
+  // Wait for Firebase data before auto-login
+  REF.once('value', () => { login(savedUser); });
+}
 </script>
 </body>
 </html>
