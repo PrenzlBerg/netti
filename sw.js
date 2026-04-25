@@ -1,5 +1,5 @@
 // Service Worker — Thuis Quest
-const CACHE = 'thuisquest-v1';
+const CACHE = 'thuisquest-v3';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

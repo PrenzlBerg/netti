@@ -626,6 +626,11 @@ function startListener() {
     console.error(err);
     setSyncDot('error');
     hideLoading();
+    // Toon duidelijke fout bovenaan de app
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#F24726;color:#fff;padding:12px 16px;font-size:13px;font-weight:700;z-index:999;text-align:center';
+    banner.textContent = '⚠️ Geen verbinding met Firebase — controleer de Rules in de console';
+    document.body.prepend(banner);
   });
 }
 
