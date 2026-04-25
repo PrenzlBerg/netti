@@ -604,6 +604,7 @@ function startListener() {
     if (!d) {
       // Database empty → migrate from localStorage if available
       migrateFromLocal();
+      setSyncDot('ok');
       hideLoading();
       return;
     }
